@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Residue</title>
+<meta name="description" content="The apps you uninstalled left ghosts behind. A local graveyard of leftover application data, identified by an open-weight model on your own machine.">
+<style>
+  :root {
+    --night: #0b0a14; --night-2: #141224; --stone: #2a2638; --stone-2: #3a3550;
+    --mist: #cfc9e6; --mist-dim: #8f88ad; --marigold: #ff9d1c; --marigold-2: #ffc457;
+    --ember: #ff5c3a; --moss: #7ddc8a; --bone: #f3eee2; --violet: #8b7cff;
+    --radius: 14px; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 70% -10%, #241f44 0%, var(--night) 55%) fixed, var(--night);
+    color: var(--mist); font-family: var(--sans); line-height: 1.5; min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .moon {
+    position: fixed; top: 48px; right: 8vw; width: 120px; height: 120px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff9e8 0%, #efe3c2 45%, #c9bd99 100%);
+    box-shadow: 0 0 80px 30px rgba(255, 240, 200, .12), 0 0 200px 80px rgba(255, 200, 120, .06);
+    opacity: .9; pointer-events: none; z-index: 0;
+  }
+  .fog {
+    position: fixed; left: -20vw; right: -20vw; bottom: -10vh; height: 45vh; pointer-events: none; z-index: 0;
+    background: radial-gradient(60% 50% at 30% 100%, rgba(170,160,210,.14), transparent 70%),
+                radial-gradient(50% 45% at 75% 100%, rgba(170,160,210,.10), transparent 70%);
+    animation: drift 28s ease-in-out infinite alternate;
+  }
+  @keyframes drift { from { transform: translateX(-3vw); } to { transform: translateX(3vw); } }
+  @media (prefers-reduced-motion: reduce) { .fog, .flame { animation: none !important; } }
+
+  main { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 40px 16px 80px; }
+  header { margin-bottom: 28px; }
+  h1 {
+    font-family: var(--serif); font-weight: 400; letter-spacing: .32em; font-size: clamp(34px, 6vw, 64px);
+    margin: 0; color: var(--bone); text-shadow: 0 0 30px rgba(139,124,255,.35);
+  }
+  .tagline { font-family: var(--serif); font-style: italic; font-size: clamp(17px, 2.4vw, 22px); color: var(--mist); margin: 6px 0 0; }
+  .meta { color: var(--mist-dim); font-size: 13px; margin-top: 10px; }
+  .meta code { font-family: var(--mono); color: var(--marigold-2); }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 26px 0 18px; }
+  .tile {
+    background: linear-gradient(180deg, var(--night-2), #100e1c); border: 1px solid var(--stone);
+    border-radius: var(--radius); padding: 14px 16px; cursor: pointer; transition: border-color .15s, transform .15s;
+  }
+  .tile:hover { border-color: var(--stone-2); transform: translateY(-1px); }
+  .tile.active { border-color: var(--marigold); box-shadow: 0 0 0 1px rgba(255,157,28,.35) inset; }
+  .tile .n { font-family: var(--serif); font-size: 34px; line-height: 1; color: var(--bone); }
+  .tile .l { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; color: var(--mist-dim); margin-top: 6px; }
+  .tile .s { font-size: 13px; color: var(--marigold-2); margin-top: 4px; min-height: 18px; }
+  .tile.ghost .n { color: var(--marigold); }
+
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0 20px; }
+  .bar .spacer { flex: 1; }
+  input[type=search] {
+    background: var(--night-2); border: 1px solid var(--stone); color: var(--mist); border-radius: 10px;
+    padding: 9px 12px; font-size: 14px; min-width: 220px; font-family: var(--sans);
+  }
+  button {
+    font-family: var(--sans); font-size: 14px; border-radius: 10px; padding: 9px 14px; cursor: pointer;
+    border: 1px solid var(--stone-2); background: var(--stone); color: var(--bone); transition: background .15s, border-color .15s;
+  }
+  button:hover { background: var(--stone-2); }
+  button.primary { background: linear-gradient(180deg, var(--marigold-2), var(--marigold)); color: #2a1600; border-color: #b86d00; font-weight: 600; }
+  button.primary:hover { filter: brightness(1.06); }
+  button:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+  .hint { font-size: 13px; color: var(--mist-dim); }
+
+  .yard { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; align-items: start; }
+  .grave {
+    position: relative; background: linear-gradient(180deg, #3b3650 0%, #2a2638 60%, #211e2e 100%);
+    border: 1px solid #4a4462; border-radius: 120px 120px 14px 14px / 90px 90px 14px 14px; padding: 30px 20px 18px;
+    box-shadow: 0 18px 30px -20px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .grave::after {
+    content: ""; position: absolute; left: 8%; right: 8%; bottom: -9px; height: 14px; border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(60,90,60,.55), transparent 70%);
+  }
+  .grave.unsure { background: linear-gradient(180deg, #343147 0%, #262337 60%, #1d1b29 100%); border-style: dashed; }
+  .grave.keep { background: linear-gradient(180deg, #243325 0%, #1c271e 60%, #161d17 100%); border-color: #35513a; }
+  .grave.living { background: linear-gradient(180deg, #1f2238, #171a2c); border-color: #2f3454; }
+  .grave.protected { background: linear-gradient(180deg, #1a1a22, #141419); border-color: #2b2b36; opacity: .75; }
+  .grave.buried { background: linear-gradient(180deg, #2a2016, #1b150f); border-color: #4a3a22; }
+  .rip { font-family: var(--serif); letter-spacing: .4em; font-size: 12px; color: var(--mist-dim); text-align: center; }
+  .grave.keep .rip, .grave.living .rip { letter-spacing: .25em; }
+  .name { font-family: var(--serif); font-size: 22px; color: var(--bone); text-align: center; margin: 4px 0 2px; word-break: break-word; }
+  .vendor { text-align: center; font-size: 13px; color: var(--mist-dim); min-height: 18px; }
+  .dates { text-align: center; font-family: var(--mono); font-size: 12px; color: var(--marigold-2); margin: 10px 0; }
+  .reason { font-size: 13.5px; color: var(--mist); margin: 8px 0 0; }
+  .epitaph { font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--bone); margin: 10px 0 0; text-align: center; }
+  .path { font-family: var(--mono); font-size: 11px; color: var(--mist-dim); margin-top: 12px; word-break: break-all; opacity: .85; }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+  .pick { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mist-dim); cursor: pointer; }
+  .pick input { accent-color: var(--marigold); width: 16px; height: 16px; }
+  .conf { font-size: 11px; color: var(--mist-dim); font-family: var(--mono); }
+  .candle { position: absolute; top: -14px; right: 22px; width: 10px; height: 26px; background: linear-gradient(#f7eacb, #d9c69a); border-radius: 3px; }
+  .flame {
+    position: absolute; left: 50%; top: -14px; width: 10px; height: 16px; margin-left: -5px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    background: radial-gradient(circle at 50% 70%, #fff4b0, var(--marigold) 60%, transparent 70%);
+    box-shadow: 0 0 14px 4px rgba(255,157,28,.45); animation: flicker 1.6s ease-in-out infinite alternate;
+  }
+  @keyframes flicker { 0% { transform: scaleY(1) rotate(-2deg); opacity: .9; } 100% { transform: scaleY(1.15) rotate(3deg); opacity: 1; } }
+  .flower { position: absolute; top: -10px; left: 22px; width: 22px; height: 22px; border-radius: 50%;
+    background: radial-gradient(circle, #ffd66b 0 25%, var(--marigold) 26% 55%, #e36a12 56% 100%); box-shadow: 0 0 0 3px #2a2638; }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--mist-dim); font-family: var(--serif); font-size: 18px; }
+  footer { margin-top: 48px; font-size: 13px; color: var(--mist-dim); border-top: 1px solid var(--stone); padding-top: 18px; }
+  footer code { font-family: var(--mono); color: var(--mist); }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0;
+    background: var(--bone); color: #1a1626; padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 5;
+    transition: opacity .2s, transform .2s; max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.07); color: var(--mist-dim); margin-left: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="moon" aria-hidden="true"></div>
+<div class="fog" aria-hidden="true"></div>
+<main>
+  <header>
+    <h1>RESIDUE</h1>
+    <p class="tagline">The apps you uninstalled left ghosts behind.</p>
+    <p class="meta" id="meta">Reading the last report…</p>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="Summary"></section>
+
+  <div class="bar">
+    <input type="search" id="q" placeholder="Search names, vendors, paths…" aria-label="Search">
+    <label class="pick"><input type="checkbox" id="all"> select every ghost shown</label>
+    <span class="spacer"></span>
+    <span class="hint" id="selhint"></span>
+    <button class="primary" id="bury" disabled>Bury selected</button>
+  </div>
+
+  <section class="yard" id="yard" aria-live="polite"></section>
+
+  <footer>
+    <div id="footnote"></div>
+    <div style="margin-top:8px">Nothing is deleted. "Bury" moves a folder to <code id="qpath">~/.residue/quarantine</code>; "Restore" puts it back exactly where it was.</div>
+  </footer>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  let report = null, demo = false, filter = 'ghost', selected = new Set();
+
+  const LABELS = {
+    ghost: ['Ghosts', 'leftovers of apps that are gone'],
+    unsure: ['Unsure', 'the model would not swear to it'],
+    keep: ['Keep', 'still used by something'],
+    living: ['Living', 'app is still installed'],
+    protected: ['Protected', 'belongs to the OS'],
+    buried: ['Buried', 'moved to quarantine'],
+  };
+
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function renderMeta() {
+    const t = report.totals;
+    const model = report.model ? `<code>${esc(report.model)}</code> on this machine` : 'no model reachable, judged by idle time only';
+    $('#meta').innerHTML = `${esc(report.platform)} · ${t.scanned.toLocaleString()} leftovers from ${t.apps_seen || t.scanned} apps checked against ${t.installed_apps} installed apps in ${report.scan_seconds}s · identified by ${model} · ${esc(report.generated_at)}${demo ? '<span class="pill">demo replay</span>' : ''}`;
+    $('#footnote').textContent = report.fallback
+      ? 'The local model was not reachable during this scan, so nothing was promoted to "ghost". Start Ollama and scan again for real verdicts.'
+      : `Verdicts come from ${report.model}, an open-weight model running locally through Ollama. No folder name, path or file ever left this computer.`;
+  }
+
+  function renderTiles() {
+    const t = report.totals;
+    const defs = [
+      ['ghost', t.ghosts, t.ghost_size + ' haunting'],
+      ['unsure', t.unsure, t.unsure_size],
+      ['keep', t.keep, ''],
+      ['living', t.living, ''],
+      ['protected', t.protected, ''],
+      ['buried', t.buried, ''],
+    ];
+    $('#tiles').innerHTML = defs.map(([k, n, s]) =>
+      `<div class="tile ${k} ${filter === k ? 'active' : ''}" data-k="${k}" role="button" tabindex="0" title="${esc(LABELS[k][1])}">
+         <div class="n">${n}</div><div class="l">${LABELS[k][0]}</div><div class="s">${esc(s)}</div></div>`).join('');
+    document.querySelectorAll('.tile').forEach(el => {
+      el.onclick = () => { filter = el.dataset.k; selected.clear(); render(); };
+      el.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') el.onclick(); };
+    });
+  }
+
+  function visible() {
+    const q = $('#q').value.trim().toLowerCase();
+    return report.items.filter(e => e.status === filter && (!q ||
+      [e.name, e.product, e.vendor, e.path, e.reason, e.matched_app].join(' ').toLowerCase().includes(q)));
+  }
+
+  function card(e) {
+    const st = e.status;
+    const head = st === 'ghost' ? 'R · I · P' : st === 'buried' ? 'BURIED' : st === 'unsure' ? 'UNSURE' : st === 'keep' ? 'STILL IN USE' : st === 'living' ? 'ALIVE' : 'PROTECTED';
+    const vendor = [e.vendor, e.category].filter(x => x && x !== 'Unknown').join(' · ') || (e.matched_app ? 'belongs to ' + e.matched_app : '');
+    const dates = `${e.first_seen || '?'} — ${e.last_modified || '?'} · ${e.size}${e.files ? ' · ' + e.files.toLocaleString() + ' files' : ''}`;
+    const canPick = (st === 'ghost' || st === 'unsure') && !demo;
+    const action = st === 'buried' && !demo ? `<button data-restore="${esc(e.id)}">Restore</button>` :
+                   canPick ? `<button data-bury="${esc(e.id)}">Bury</button>` : '';
+    const conf = e.confidence != null ? `<span class="conf">${Math.round(e.confidence * 100)}% sure</span>` : '';
+    const deco = st === 'ghost' ? '<div class="flower" aria-hidden="true"></div><div class="candle" aria-hidden="true"><div class="flame"></div></div>' : st === 'buried' ? '<div class="flower" aria-hidden="true"></div>' : '';
+    return `<article class="grave ${st}" data-id="${esc(e.id)}">
+      ${deco}
+      <div class="rip">${head}</div>
+      <div class="name">${esc(e.product || e.name)}</div>
+      <div class="vendor">${esc(vendor)}</div>
+      <div class="dates">${esc(dates)}</div>
+      ${e.reason ? `<p class="reason">${esc(e.reason)}</p>` : ''}
+      ${e.epitaph ? `<p class="epitaph">“${esc(e.epitaph)}”</p>` : ''}
+      <div class="path">${(e.parts && e.parts.length > 1) ? e.parts.map(p => esc(p.path) + ' <span class="pill">' + esc(p.bytes >= 1048576 ? (p.bytes/1048576).toFixed(1)+' MB' : p.bytes >= 1024 ? (p.bytes/1024).toFixed(0)+' KB' : p.bytes+' B') + '</span>').join('<br>') : esc(e.path)}</div>
+      <div class="foot">
+        ${canPick ? `<label class="pick"><input type="checkbox" data-pick="${esc(e.id)}" ${selected.has(e.id) ? 'checked' : ''}> select</label>` : '<span></span>'}
+        ${conf}${action}
+      </div>
+    </article>`;
+  }
+
+  function render() {
+    renderMeta(); renderTiles();
+    const items = visible();
+    const yard = $('#yard');
+    yard.innerHTML = items.length ? items.map(card).join('') :
+      `<div class="empty" style="grid-column:1/-1">${filter === 'ghost' ? 'No ghosts. Either this machine is clean, or the model was not reachable.' : 'Nothing here.'}</div>`;
+    yard.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { cb.checked ? selected.add(cb.dataset.pick) : selected.delete(cb.dataset.pick); updateBar(); });
+    yard.querySelectorAll('[data-bury]').forEach(b => b.onclick = () => bury([b.dataset.bury]));
+    yard.querySelectorAll('[data-restore]').forEach(b => b.onclick = () => restore(b.dataset.restore));
+    updateBar();
+  }
+
+  function updateBar() {
+    const n = selected.size;
+    $('#bury').disabled = n === 0 || demo;
+    $('#bury').textContent = n ? `Bury ${n} selected` : 'Bury selected';
+    $('#selhint').textContent = demo ? 'Demo replay: burying is disabled.' : (filter === 'ghost' || filter === 'unsure') ? '' : 'Only ghosts and unsure items can be buried.';
+    $('#all').disabled = demo || !(filter === 'ghost' || filter === 'unsure');
+  }
+
+  async function post(url, body) {
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!r.ok || j.error) throw new Error(j.error || r.statusText);
+    return j;
+  }
+
+  async function bury(ids) {
+    try {
+      const j = await post('/api/bury', { ids });
+      j.buried.forEach(b => { const e = report.items.find(x => x.id === b.id); if (e) e.status = 'buried'; });
+      report.totals = j.totals; ids.forEach(i => selected.delete(i));
+      toast(`${j.buried.length} folder${j.buried.length === 1 ? '' : 's'} moved to quarantine. Restore any time.`);
+      render();
+    } catch (err) { toast('Could not bury: ' + err.message); }
+  }
+
+  async function restore(id) {
+    try {
+      const j = await post('/api/restore', { id });
+      const e = report.items.find(x => x.id === id); if (e) e.status = e.verdict === 'ghost' ? 'ghost' : 'unsure';
+      report.totals = j.totals; toast('Restored ' + (Array.isArray(j.restored) ? j.restored.length + ' folder(s)' : j.restored)); render();
+    } catch (err) { toast('Could not restore: ' + err.message); }
+  }
+
+  $('#q').oninput = render;
+  $('#all').onchange = (ev) => { visible().forEach(e => ev.target.checked ? selected.add(e.id) : selected.delete(e.id)); render(); };
+  $('#bury').onclick = () => bury([...selected]);
+
+  async function load() {
+    try {
+      const r = await fetch('/api/report', { cache: 'no-store' });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error);
+      report = j;
+    } catch (e) {
+      if (window.RESIDUE_DEMO) { report = window.RESIDUE_DEMO; demo = true; }
+      else { $('#meta').textContent = 'No report yet. Run: python -m residue'; return; }
+    }
+    if (report.quarantine) $('#qpath').textContent = report.quarantine;
+    render();
+  }
+  load();
+})();
+</script>
+</body>
+</html>
