@@ -54,16 +54,6 @@ There are four stages, and only the last one is AI. That ratio ended up being th
 
 **Consult the ghost.** Whatever is still unexplained goes to Gemma 3 4B through Ollama, four apps at a time, with the answer forced into JSON. For each app the model is told the folder names, where they are, how big and how old they are, a few file names inside, and which apps from the same company are still installed. It answers with the product name, the company, what kind of app it was, a verdict (`ghost`, `keep` or `unsure`), how confident it is, a one-line reason and an epitaph. If it says ghost with less than 60% confidence, that becomes unsure, so the model can't bury something on a coin flip. If it skips an app in a batch, that app gets asked about again on its own.
 
-### Things that went wrong
-
-I expected the model to be the hard part. It wasn't. The hard part was making sure I wasn't asking it the wrong question.
-
-- **Vendor words.** My first matcher saw "microsoft" in `Microsoft Edge Beta`, found "microsoft" in VS Code's bundle id, and declared Edge alive and well. Hence the three-apps rule above.
-- **Zoom was dead, apparently.** `ZoomChat.plist`, `ZoomPhone` and `zoomusinstall.log` never produced the token "zoom", so the model was told Zoom wasn't installed and, quite reasonably, called all three ghosts. The fix was to split CamelCase and match on prefixes, so `zoomus` finds `zoom.us`. The lesson stuck with me: if the context you hand the model is wrong, a confident answer is worse than no answer.
-- **The model wanted to bury things it shouldn't.** It called the pip cache and the Office group container ghosts, because no `.app` is named "pip". So two kinds of thing never reach the model at all now: caches of command-line developer tools, and shared containers of a developer team that still has apps installed. Rules first, model last.
-- **Where Gemma still gets it wrong.** It kept `com.clipy-app.Clipy` at 85% ("preferences may be reused"). Clipy is gone. It also kept the main `Microsoft Edge` folder because other Microsoft apps are installed, while correctly burying Edge Beta, Dev and Canary one call earlier. Both are in the video, unedited. A 4B model is a good intern, not an auditor, which is exactly why every verdict is a move and never a delete.
-- **Batches.** Six apps per call and the model would skip or reorder items. Four per call, matched by name instead of position, with a single-item retry pass, and that dropped to zero on this machine.
-
 ### The numbers
 
 For the record, from a four-week-old MacBook with 8 GB of RAM:
@@ -79,6 +69,8 @@ For the record, from a four-week-old MacBook with 8 GB of RAM:
 | Declared ghosts | 12 (355 KB) |
 | Wrong verdicts, by my own count | 2 |
 | Scan time, model included | about 2.5 minutes |
+
+The two wrong verdicts: Gemma kept Clipy's preferences at 85% ("preferences may be reused") even though Clipy is gone, and it kept the main Microsoft Edge folder because other Microsoft apps are installed, while correctly burying Edge Beta, Dev and Canary. Both are in the video, unedited. A 4B model is a good intern, not an auditor, which is exactly why every verdict is a move and never a delete.
 
 I'll be honest that these are small numbers. A new laptop has small ghosts. The real test is an older Windows machine that has seen years of installs, and the Windows paths are in the code waiting for one.
 
