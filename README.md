@@ -8,8 +8,6 @@ Nothing is deleted. Ever. "Burying" a ghost moves its folder to a quarantine dir
 
 No cloud, no API key, no telemetry. The only network call is to `127.0.0.1:11434`, your local [Ollama](https://ollama.com).
 
-![App Graveyard](docs/screenshot.png)
-
 ## Run it
 
 **Open the site: https://raushanichaudhary.github.io/app-graveyard/**
