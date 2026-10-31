@@ -1,6 +1,6 @@
 ---
 title: "App Graveyard: find and bury the leftovers of uninstalled apps, judged by Gemma 3 on your own machine"
-published: false
+published: true
 tags: devchallenge, hf26challenge, ai, opensource
 ---
 
