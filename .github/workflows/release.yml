@@ -1,0 +1,59 @@
+name: Build helpers
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: AppGraveyard-windows.exe
+            sep: ";"
+          - os: macos-latest
+            name: AppGraveyard-macos-apple-silicon
+            sep: ":"
+          - os: macos-13
+            name: AppGraveyard-macos-intel
+            sep: ":"
+          - os: ubuntu-latest
+            name: AppGraveyard-linux
+            sep: ":"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyinstaller
+      - run: pyinstaller --onefile --console --name "${{ matrix.name }}" --add-data "appgraveyard/ui/index.html${{ matrix.sep }}appgraveyard/ui" launcher.py
+        shell: bash
+      - run: ls -la dist
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/${{ matrix.name }}*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - run: ls -la out
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --title "App Graveyard ${GITHUB_REF_NAME}" --notes "Helper binaries. Windows: double-click the .exe (click More info, then Run anyway on the SmartScreen screen). macOS and Linux: prefer the one-line installer on the site; the binaries here are unsigned." out/* || gh release upload "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --clobber out/*
