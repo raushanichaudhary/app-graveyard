@@ -1,5 +1,5 @@
 ---
-title: "I uninstalled iTerm2, Arc and three Edge betas. A local Gemma found what they left behind."
+title: "App Graveyard: find and bury the leftovers of uninstalled apps, judged by Gemma 3 on your own machine"
 published: false
 tags: devchallenge, hf26challenge, ai, opensource
 ---
@@ -16,7 +16,7 @@ It runs on macOS, Windows and Linux, offline, with no API key. The only network 
 
 ## Demo
 
-![Demo: first visit with the three steps, the page connecting by itself, a scan with progress, the graveyard, one bury, one restore, and a return visit that needs no setup](https://raw.githubusercontent.com/raushanichaudhary/app-graveyard/main/docs/demo.gif)
+![Demo: first visit with the three steps, the page connecting by itself, a scan with progress, the graveyard, one bury, one restore, and a return visit that needs no setup](https://dev-to-uploads.s3.us-east-2.amazonaws.com/uploads/articles/whsyxqfq03wzowu8jbfo.gif)
 
 (Same recording with narration: [demo.mp4](https://github.com/raushanichaudhary/app-graveyard/raw/main/docs/demo.mp4), 1 min 42 s. The three-minute model stage is cut out of the middle.)
 
@@ -88,7 +88,7 @@ The input to this tool is a list of every application you have ever used, with p
 
 With an open-weight model it never leaves the laptop. A quantised 4B Gemma on a machine with 8 GB of RAM identified "com.clipy-app.Clipy" as a clipboard manager, knew that OneAuth is a Microsoft auth broker still used by Office, and wrote a tombstone for each dead browser channel. It did all of that offline, for free, and you can swap the model with one environment variable. The same tool with a cloud API would need a key, a bill, and a privacy policy.
 
-## The Spirit Of It
+## The Spirit of It
 
 Día de los Muertos is about remembering, not erasing. App Graveyard does not delete anything. It gives each dead app a marigold, a candle and a line of remembrance, and moves it to a quarantine you can reopen. The ghost in your machine is just data nobody came back for.
 
