@@ -16,7 +16,15 @@ No cloud, no API key, no telemetry. The only network call is to `127.0.0.1:11434
 
 The page is the app. It walks you through three one-time steps (install Python 3, install Ollama, download and double-click the 1 MB helper), then connects to that helper on `127.0.0.1:7777` by itself and does everything else from the page: checks the model, downloads it once if needed (about 3 GB through Ollama), scans with a progress bar, shows the graveyard, buries and restores. The helper only answers that page and `127.0.0.1`; no other website can talk to it.
 
-After the one-time downloads, nothing needs the internet: the helper serves the same page at http://127.0.0.1:7777/ when you double-click the launcher (`App Graveyard.command`, `App Graveyard.bat` or `app-graveyard.sh`).
+On macOS and Linux the page gives you one line to paste into Terminal; it downloads the helper into `~/.app-graveyard/app` and starts it:
+
+```bash
+curl -fsSL https://raushanichaudhary.github.io/app-graveyard/run.sh | sh
+```
+
+On Windows the page offers the ZIP; unzip it and double-click `App Graveyard.bat`. (macOS gets a pasted line rather than a double-click because Gatekeeper blocks downloaded scripts that are not Apple-signed. If you cloned the repo with git, `App Graveyard.command` works fine.)
+
+After the one-time downloads, nothing needs the internet: the helper serves the same page at http://127.0.0.1:7777/.
 
 **The terminal way.**
 
