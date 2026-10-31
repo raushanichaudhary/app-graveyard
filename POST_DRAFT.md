@@ -80,7 +80,7 @@ On a one-month-old MacBook with 8 GB of RAM:
 | Wrong verdicts, by my own count | 2 |
 | Scan time, model included | about 2.5 minutes |
 
-The small size is the point: a new laptop has small ghosts. My sister's three-year-old Windows machine is the real test, and the Windows paths are in the code waiting for it.
+The small size is the point: a new laptop has small ghosts. A three-year-old Windows machine is the real test, and the Windows paths are in the code waiting for it.
 
 ## Why Does Open Innovation Matter?
 
