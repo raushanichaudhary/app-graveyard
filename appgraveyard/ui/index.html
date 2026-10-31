@@ -240,6 +240,11 @@
   .cmd code { flex: 1; display: block; padding: 10px 12px !important; border-radius: 9px !important; font-size: 12.5px; line-height: 1.4; word-break: break-all; }
   .cmd .copy { flex: none; padding: 6px 12px; }
   kbd { font-family: var(--sans); font-size: 12px; padding: 1px 6px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); }
+  .setup.again .step:nth-child(-n+2), .setup.again .setup-lede { display: none; }
+  .setup.again .steps { grid-template-columns: 1fr; }
+  .setup.again .step::before { content: none; }
+  .setup .full { margin: 14px 0 0; font-size: 13px; }
+  .setup .full a { color: var(--ink-3); }
   .waiting { margin: 22px 0 0; font-size: 13.5px; color: var(--ink-3); display: flex; gap: 10px; align-items: center; }
   .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.15); border-top-color: var(--marigold-2); animation: spin 1s linear infinite; flex: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -275,6 +280,7 @@
           </div>
         </div>
       </div>
+      <p class="full" id="fullSetup" hidden><a href="#" id="showFull">Show the full setup steps</a></p>
       <p class="waiting"><span class="spin"></span> Waiting for the helper on this computer… this page connects by itself the moment it starts. If the browser asks to allow access to your local network, allow it.</p>
     </section>
     <div class="start" id="start" hidden>
@@ -363,7 +369,7 @@
     $('#verdict').innerHTML = v;
     const model = report.model ? `<code>${esc(report.model)}</code> running locally` : 'no model, idle-time heuristic';
     $('#meta').innerHTML = `${t.scanned.toLocaleString()} leftovers · ${(t.apps_seen || t.scanned).toLocaleString()} apps · ${t.installed_apps} installed · ${report.scan_seconds}s · verdicts by ${model} · ${esc(report.generated_at)}`;
-    { $('#meta').insertAdjacentHTML('beforeend', ' <button class="btn rescan" id="rescan">Scan again</button>'); $('#rescan').onclick = () => { showStart(); window.scrollTo({ top: 0, behavior: 'smooth' }); }; }
+    { $('#meta').insertAdjacentHTML('beforeend', ' <button class="btn rescan" id="rescan">Scan again</button>'); $('#rescan').onclick = () => { if (!connected) { toast('Start the helper first, then scan again.'); return; } showStart(); window.scrollTo({ top: 0, behavior: 'smooth' }); }; }
     $('#footnote').textContent = report.fallback
       ? (report.skipped ? 'This scan skipped the model. Scan again with it for real verdicts.' : 'The local model was not reachable during this scan. Start Ollama and scan again for real verdicts.')
       : `Verdicts come from ${report.model}, an open-weight model running through Ollama on this machine. No folder name, path or file left this computer.`;
@@ -465,6 +471,7 @@
     return j;
   }
   async function bury(ids) {
+    if (!connected) { toast('Start the helper first (see the top of the page).'); return; }
     try {
       const j = await post('/api/bury', { ids });
       j.buried.forEach(b => { const e = report.items.find(x => x.id === b.id); if (e) e.status = 'buried'; });
@@ -474,6 +481,7 @@
     } catch (err) { toast('Could not bury: ' + err.message); }
   }
   async function restore(id) {
+    if (!connected) { toast('Start the helper first (see the top of the page).'); return; }
     try {
       const j = await post('/api/restore', { id });
       const e = report.items.find(x => x.id === id); if (e) e.status = e.verdict === 'ghost' ? 'ghost' : 'unsure';
@@ -559,6 +567,9 @@
     if (job.status === 'done') { await load(true); toast('Scan finished.'); }
   }
 
+  const KEY = 'app-graveyard';
+  function remembered() { try { return JSON.parse(localStorage.getItem(KEY) || 'null') || {}; } catch (e) { return {}; } }
+  function remember(patch) { try { localStorage.setItem(KEY, JSON.stringify(Object.assign(remembered(), patch))); } catch (e) {} }
   let setupTimer = null;
   function showSetup() {
     connected = false;
@@ -567,10 +578,25 @@
     $('#start').hidden = true;
     $('#setup').hidden = false;
     document.querySelector('main').style.display = 'none';
+    const mem = remembered();
+    const again = !!mem.setup && !fullSetup;
+    $('#setup').classList.toggle('again', again);
+    $('#fullSetup').hidden = !again;
+    document.querySelector('.setup .step:nth-child(3) h3').textContent = again ? 'Start the helper' : 'Run the helper';
+    if (again && mem.report) {
+      report = mem.report;
+      selected.clear();
+      document.querySelector('main').style.display = '';
+      render();
+      $('#meta').insertAdjacentHTML('beforeend', ' · <b>helper not running</b>, showing your last scan. Start it to scan again, bury or restore.');
+    } else if (again) {
+      $('#meta').textContent = 'You set this up before. The helper only runs while its window is open, so start it again:';
+    }
     clearTimeout(setupTimer);
     setupTimer = setTimeout(load, 3000);
   }
-  function hideSetup() { clearTimeout(setupTimer); $('#setup').hidden = true; if (!connected) { connected = true; toast('Connected to App Graveyard on this computer.'); } }
+  let fullSetup = false;
+  function hideSetup() { clearTimeout(setupTimer); $('#setup').hidden = true; remember({ setup: true }); if (!connected) { connected = true; toast('Connected to App Graveyard on this computer.'); } }
 
   async function load(afterScan) {
     await resolveApi();
@@ -588,6 +614,7 @@
       return;
     }
     hideSetup();
+    remember({ report });
     if (report.quarantine) $('#qpath').textContent = report.quarantine;
     selected.clear();
     hideStart();
@@ -595,6 +622,7 @@
     try { await fetchStatus(); } catch (e) { return; }
     if (status.job.status === 'running' && !afterScan) { showStart(); poll(); }
   }
+  $('#showFull').onclick = (e) => { e.preventDefault(); fullSetup = true; showSetup(); };
   (function () {
     const ua = navigator.userAgent, p = navigator.platform || '';
     const os = /Win/.test(p) || /Windows/.test(ua) ? 'win' : /Mac/.test(p) ? 'mac' : /Linux/.test(p) ? 'linux' : null;
