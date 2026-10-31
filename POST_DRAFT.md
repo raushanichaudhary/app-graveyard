@@ -18,9 +18,9 @@ It runs on macOS, Windows and Linux, offline, with no API key. The only network 
 
 ![App Graveyard: one tombstone per dead app, with a verdict, a reason and an epitaph](https://raw.githubusercontent.com/raushanichaudhary77-create/app-graveyard/main/docs/screenshot.png)
 
-Install steps and download: https://raushanichaudhary77-create.github.io/app-graveyard/
+**Open https://raushanichaudhary77-create.github.io/app-graveyard/** and follow the three steps on the page. The page itself connects to a 1 MB helper on your own machine and runs the scan from there, so the site is the app, not a brochure.
 
-Double-click `App Graveyard.command` (or `App Graveyard.bat` on Windows), press **Scan this machine**, and watch the progress bar. Or from a terminal, a run on a one-month-old Mac:
+Offline, double-clicking the helper opens the same page from `127.0.0.1`. Or from a terminal, a run on a one-month-old Mac:
 
 ```
 $ python -m appgraveyard

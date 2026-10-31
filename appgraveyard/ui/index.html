@@ -222,6 +222,25 @@
   .prog .stage { margin: 10px 0 0; font-size: 13px; color: var(--ink-2); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .prog .note { margin: 6px 0 0; font-size: 12px; color: var(--ink-3); }
   .rescan { margin-left: 10px; vertical-align: middle; padding: 4px 10px; font-size: 12px; }
+
+  /* setup (public page, helper not running yet) */
+  .setup[hidden] { display: none; }
+  .setup { margin-top: 26px; max-width: 980px; }
+  .setup-lede { font-size: 15px; color: var(--ink-2); margin: 0 0 24px; max-width: 680px; }
+  .setup code { font-family: var(--mono); font-size: 12.5px; background: rgba(0,0,0,.35); padding: 2px 6px; border-radius: 6px; color: var(--marigold-2); }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; counter-reset: s; }
+  .step { position: relative; padding: 22px 18px 18px; border-radius: 14px; background: linear-gradient(180deg, var(--stone-1), var(--stone-2)); border: 1px solid var(--stone-edge); box-shadow: 0 20px 40px -24px #000; }
+  .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 16px; width: 28px; height: 28px; border-radius: 50%; background: var(--marigold); color: #2a1600; font-weight: 700; display: grid; place-items: center; font-size: 13px; border: 3px solid var(--sky-1); }
+  .step h3 { margin: 2px 0 8px; font-family: var(--serif); font-weight: 400; font-size: 19px; }
+  .step p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+  .step p + p { margin-top: 10px; }
+  .step a.btn { text-decoration: none; display: inline-block; }
+  .os { display: inline-flex; gap: 6px; flex-wrap: wrap; vertical-align: middle; }
+  .os span { font-size: 12px; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); color: var(--ink-3); font-family: var(--mono); }
+  .os span.on { border-color: var(--marigold); color: var(--marigold-2); background: rgba(255,159,28,.12); }
+  .waiting { margin: 22px 0 0; font-size: 13.5px; color: var(--ink-3); display: flex; gap: 10px; align-items: center; }
+  .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.15); border-top-color: var(--marigold-2); animation: spin 1s linear infinite; flex: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -236,6 +255,15 @@
     <p class="tagline">The apps you uninstalled left ghosts behind.</p>
     <p class="verdict" id="verdict">Reading the last report…</p>
     <p class="meta" id="meta"></p>
+    <section class="setup" id="setup" hidden>
+      <p class="setup-lede">This page runs the scan on <b>your</b> computer through a tiny helper you run once. Nothing is uploaded; the page only talks to <code>127.0.0.1</code>.</p>
+      <div class="steps">
+        <div class="step"><h3>Install Python 3</h3><p>macOS and most Linux already have it. On Windows, get it from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> and tick <b>Add python.exe to PATH</b>.</p></div>
+        <div class="step"><h3>Install Ollama</h3><p>From <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a>. Open it once. It runs the AI model on your machine; the model itself is downloaded from this page later, one click.</p></div>
+        <div class="step"><h3>Run the helper</h3><p><a class="btn bury" href="https://github.com/raushanichaudhary77-create/app-graveyard/archive/refs/heads/main.zip">Download the helper (ZIP, 1 MB)</a></p><p>Unzip it and double-click <span class="os" id="os"><span data-os="mac">App Graveyard.command</span><span data-os="win">App Graveyard.bat</span><span data-os="linux">app-graveyard.sh</span></span>. Keep its small window open. On macOS, if the first double-click is refused, right-click the file and choose Open.</p></div>
+      </div>
+      <p class="waiting"><span class="spin"></span> Waiting for the helper on this computer… this page connects by itself the moment it starts. If the browser asks to allow access to your local network, allow it.</p>
+    </section>
     <div class="start" id="start" hidden>
       <p class="model" id="modelLine"></p>
       <div class="actions" id="startActions"></div>
@@ -290,6 +318,14 @@
 <script>
 (function () {
   const $ = (s) => document.querySelector(s);
+  // Served by the local helper (same origin) or by GitHub Pages (talks to the helper on 127.0.0.1:7777).
+  let API = null, connected = false;
+  async function resolveApi() {
+    if (API !== null) return;
+    const loop = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+    if (loop) { try { const r = await fetch('/api/status', { cache: 'no-store' }); if (r.ok) { API = ''; connected = true; return; } } catch (e) {} }
+    API = 'http://127.0.0.1:7777';
+  }
   let report = null, filter = 'ghost', selected = new Set(), showAll = false;
 
   const LABELS = {
@@ -405,8 +441,12 @@
     $('#dock').classList.toggle('show', n > 0);
   }
 
+  const gone = (err) => err instanceof TypeError;  // "Failed to fetch": the helper is not running
+  function lost() { report = null; showSetup(); toast('The helper on this computer stopped. Start it again and this page reconnects by itself.'); }
   async function post(url, body) {
-    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    let r;
+    try { r = await fetch(API + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+    catch (err) { if (gone(err)) lost(); throw err; }
     const j = await r.json();
     if (!r.ok || j.error) throw new Error(j.error || r.statusText);
     return j;
@@ -434,9 +474,9 @@
   $('#dockClear').onclick = () => { selected.clear(); render(); };
 
   // ---- welcome panel: scan from the page, no terminal needed ----
-  let status = null, pollTimer = null;
+  let status = null, pollTimer = null, pollFails = 0;
   async function fetchStatus() {
-    const r = await fetch('/api/status', { cache: 'no-store' });
+    const r = await fetch(API + '/api/status', { cache: 'no-store' });
     if (!r.ok) throw new Error('status ' + r.status);
     status = await r.json();
     return status;
@@ -475,13 +515,13 @@
   function hideStart() { $('#start').hidden = true; if (report) { document.querySelector('main').style.display = ''; render(); } }
   async function startJob(url, body) {
     try {
-      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const r = await fetch(API + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json();
       if (!j.started) throw new Error(j.error || 'already running');
       $('#startActions').innerHTML = '';
       $('#prog').hidden = false;
       poll();
-    } catch (err) { toast('Could not start: ' + err.message); }
+    } catch (err) { if (gone(err)) lost(); else toast('Could not start: ' + err.message); }
   }
   function paintProgress(job) {
     const wrap = $('#progBarWrap'), bar = $('#progBar');
@@ -497,7 +537,7 @@
   }
   async function poll() {
     clearTimeout(pollTimer);
-    try { await fetchStatus(); } catch (e) { pollTimer = setTimeout(poll, 1500); return; }
+    try { await fetchStatus(); pollFails = 0; } catch (e) { if (++pollFails >= 4) { lost(); return; } pollTimer = setTimeout(poll, 1500); return; }
     const job = status.job;
     if (job.status === 'running') { paintProgress(job); pollTimer = setTimeout(poll, 700); return; }
     $('#prog').hidden = true;
@@ -506,30 +546,47 @@
     if (job.status === 'done') { await load(true); toast('Scan finished.'); }
   }
 
+  let setupTimer = null;
+  function showSetup() {
+    connected = false;
+    $('#verdict').textContent = 'Nothing has been read yet.';
+    $('#meta').textContent = 'Three one-time steps below, then this page scans your computer.';
+    $('#start').hidden = true;
+    $('#setup').hidden = false;
+    document.querySelector('main').style.display = 'none';
+    clearTimeout(setupTimer);
+    setupTimer = setTimeout(load, 3000);
+  }
+  function hideSetup() { clearTimeout(setupTimer); $('#setup').hidden = true; if (!connected) { connected = true; toast('Connected to App Graveyard on this computer.'); } }
+
   async function load(afterScan) {
+    await resolveApi();
     try {
-      const r = await fetch('/api/report', { cache: 'no-store' });
+      const r = await fetch(API + '/api/report', { cache: 'no-store' });
       const j = await r.json();
       if (j.error) throw new Error(j.error);
       report = j;
     } catch (e) {
-      {
-        report = null;
-        try { await fetchStatus(); } catch (e2) { $('#verdict').textContent = 'No report yet.'; $('#meta').innerHTML = 'Run <code>python -m appgraveyard</code> to scan this machine.'; return; }
-        showStart();
-        if (status.job.status === 'running') poll();
-        return;
-      }
+      report = null;
+      try { await fetchStatus(); } catch (e2) { showSetup(); return; }
+      hideSetup();
+      showStart();
+      if (status.job.status === 'running') poll();
+      return;
     }
+    hideSetup();
     if (report.quarantine) $('#qpath').textContent = report.quarantine;
     selected.clear();
     hideStart();
     render();
-    {
-      try { await fetchStatus(); } catch (e) { return; }
-      if (status.job.status === 'running' && !afterScan) { showStart(); poll(); }
-    }
+    try { await fetchStatus(); } catch (e) { return; }
+    if (status.job.status === 'running' && !afterScan) { showStart(); poll(); }
   }
+  (function () {
+    const ua = navigator.userAgent, p = navigator.platform || '';
+    const os = /Win/.test(p) || /Windows/.test(ua) ? 'win' : /Mac/.test(p) ? 'mac' : /Linux/.test(p) ? 'linux' : null;
+    if (os) document.querySelectorAll('#os span').forEach(el => el.classList.toggle('on', el.dataset.os === os));
+  })();
   load();
 })();
 </script>

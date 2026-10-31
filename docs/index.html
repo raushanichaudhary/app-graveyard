@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App Graveyard</title>
-<meta name="description" content="The apps you uninstalled left ghosts behind. Find them with a local open-weight model. Nothing is deleted, only buried.">
+<meta name="description" content="The apps you uninstalled left ghosts behind. A local graveyard of leftover application data, identified by an open-weight model on your own machine.">
 <style>
   :root {
     --sky-0: #06060d; --sky-1: #121026; --sky-2: #1f1a3f;
@@ -70,41 +70,177 @@
     animation: drift 30s ease-in-out infinite alternate; }
   @keyframes drift { from { transform: translateX(-2%); } to { transform: translateX(2%); } }
 
-  main { max-width: 1180px; margin: 0 auto; padding: 0 16px 80px; }
-  .lede { max-width: 720px; margin: 22px 0 0; font-size: clamp(16px, 1.6vw, 18px); color: var(--ink-2); }
-  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; align-items: center; }
-  .btn { display: inline-block; text-decoration: none; border-radius: 12px; padding: 13px 22px; font-size: 15px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: var(--ink); transition: all .15s; }
-  .btn:hover { background: rgba(255,255,255,.1); }
-  .btn.primary { background: linear-gradient(180deg, var(--marigold-2), var(--marigold)); color: #2a1600; border-color: #b86d00; font-weight: 600; }
-  .btn.primary:hover { filter: brightness(1.07); }
-  .btn small { display: block; font-size: 11px; font-weight: 400; opacity: .75; margin-top: 2px; }
-  h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(26px, 3vw, 34px); margin: 64px 0 6px; color: #f6f1e6; }
-  .sub { margin: 0 0 22px; color: var(--ink-3); }
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; counter-reset: s; }
-  .step { position: relative; padding: 22px 20px 20px; border-radius: 16px; background: linear-gradient(180deg, var(--stone-1), var(--stone-2)); border: 1px solid var(--stone-edge); box-shadow: 0 20px 40px -24px #000; }
-  .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 18px; width: 30px; height: 30px; border-radius: 50%; background: var(--marigold); color: #2a1600; font-weight: 700; display: grid; place-items: center; font-size: 14px; border: 3px solid var(--sky-0); }
-  .step h3 { margin: 4px 0 8px; font-family: var(--serif); font-weight: 400; font-size: 20px; }
-  .step p { margin: 0; font-size: 14px; color: var(--ink-2); }
-  .step p + p { margin-top: 8px; }
-  .step code, .how code, .offline code { font-family: var(--mono); font-size: 12.5px; background: rgba(0,0,0,.35); padding: 2px 6px; border-radius: 6px; color: var(--marigold-2); }
-  .os { display: inline-flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-  .os span { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); color: var(--ink-3); }
-  .os span.on { border-color: var(--marigold); color: var(--marigold-2); background: rgba(255,159,28,.12); }
-  .shot { margin-top: 28px; border-radius: 16px; overflow: hidden; border: 1px solid var(--stone-edge); box-shadow: 0 30px 60px -30px #000; }
-  .shot img { display: block; width: 100%; height: auto; }
-  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-  .card { padding: 22px 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); }
-  .card h3 { margin: 0 0 8px; font-family: var(--serif); font-weight: 400; font-size: 20px; }
-  .card p, .card li { font-size: 14px; color: var(--ink-2); }
-  .card ul { padding-left: 18px; margin: 8px 0 0; }
-  .card p { margin: 0; }
-  pre { margin: 0; padding: 16px 18px; border-radius: 12px; background: #0a0910; border: 1px solid rgba(255,255,255,.08); font-family: var(--mono); font-size: 13px; color: var(--ink-2); overflow-x: auto; line-height: 1.6; }
-  pre b { color: var(--marigold-2); font-weight: 400; }
+  /* ---------- controls ---------- */
+  main { background: linear-gradient(180deg, var(--soil) 0, var(--soil-2) 400px, var(--soil) 100%); position: relative; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 26px 16px 110px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 12px; border-radius: 999px; font-size: 14px;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--ink-2); transition: all .15s;
+  }
+  .chip:hover { background: rgba(255,255,255,.07); color: var(--ink); }
+  .chip.active { background: rgba(255,159,28,.14); border-color: rgba(255,159,28,.55); color: #fff; }
+  .chip .n { font-family: var(--serif); font-size: 18px; line-height: 1; color: #fff; }
+  .chip .s { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .chip.active .s { color: var(--marigold-2); }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+  .chip.ghost .dot { background: var(--marigold); box-shadow: 0 0 8px var(--marigold); }
+  .chip.unsure .dot { background: var(--violet); }
+  .chip.keep .dot { background: var(--moss); }
+  .chip.living .dot { background: var(--teal); }
+  .chip.protected .dot { background: #666; }
+  .chip.buried .dot { background: #a0764a; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 18px 0 22px; }
+  .toolbar .grow { flex: 1; }
+  input[type=search] {
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); color: var(--ink); border-radius: 10px;
+    padding: 10px 14px; font-size: 14px; min-width: min(320px, 100%); font-family: var(--sans); outline: none;
+  }
+  input[type=search]:focus { border-color: rgba(255,159,28,.5); }
+  .check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; user-select: none; }
+  .check input { accent-color: var(--marigold); width: 16px; height: 16px; margin: 0; }
+  .section-title { font-family: var(--serif); font-size: 22px; color: var(--ink); margin: 6px 0 4px; }
+  .section-sub { font-size: 13px; color: var(--ink-3); margin: 0 0 18px; }
+
+  /* ---------- graveyard ---------- */
+  .yard { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 26px 22px; align-items: end; padding-top: 18px; }
+  .plot { position: relative; padding-top: 26px; }
+  .stone {
+    position: relative; border-radius: 150px 150px 10px 10px / 110px 110px 10px 10px; padding: 34px 22px 20px;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.07), transparent 55%),
+      repeating-linear-gradient(135deg, rgba(255,255,255,.015) 0 2px, transparent 2px 7px),
+      linear-gradient(180deg, var(--stone-0) 0%, var(--stone-1) 45%, var(--stone-2) 100%);
+    border: 1px solid var(--stone-edge); border-bottom-color: #1a1722;
+    box-shadow: 0 30px 40px -28px rgba(0,0,0,.95), inset 0 2px 0 rgba(255,255,255,.08), inset 0 -8px 18px rgba(0,0,0,.35);
+    transition: transform .18s, box-shadow .18s, border-color .18s;
+  }
+  .plot:hover .stone { transform: translateY(-3px); box-shadow: 0 36px 44px -28px rgba(0,0,0,.95), 0 0 0 1px rgba(255,159,28,.15), inset 0 2px 0 rgba(255,255,255,.08); }
+  .plot.selected .stone { border-color: var(--marigold); box-shadow: 0 0 0 2px rgba(255,159,28,.35), 0 30px 40px -28px rgba(0,0,0,.95); }
+  .plot.unsure .stone { background: radial-gradient(120% 80% at 50% 0%, rgba(143,124,255,.12), transparent 55%), linear-gradient(180deg, #3f3a5a 0%, #2d2944 45%, #211e33 100%); border-style: dashed; border-color: #5c5680; }
+  .plot.buried .stone { background: linear-gradient(180deg, #4a3a2a 0%, #33281d 45%, #241c15 100%); border-color: #6b5236; }
+  .ground {
+    height: 18px; margin: -6px 10px 0; border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    background: radial-gradient(60% 100% at 50% 0, var(--moss-2), var(--soil) 85%);
+    position: relative;
+  }
+  .ground::before { content: ""; position: absolute; left: 8%; right: 8%; top: -3px; height: 6px; border-radius: 50%;
+    background: repeating-linear-gradient(90deg, var(--moss) 0 2px, transparent 2px 5px); opacity: .7; }
+  .engrave { text-align: center; font-family: var(--serif); letter-spacing: .5em; font-size: 11px; color: rgba(236,230,216,.55); text-shadow: 0 1px 0 rgba(0,0,0,.6); }
+  .engrave::before, .engrave::after { content: "✦"; letter-spacing: 0; margin: 0 10px; color: rgba(255,159,28,.55); }
+  .plot.unsure .engrave::before, .plot.unsure .engrave::after { color: rgba(143,124,255,.6); }
+  .name { font-family: var(--serif); font-size: 24px; line-height: 1.15; text-align: center; color: #fbf7ee; margin: 10px 0 4px; text-shadow: 0 1px 0 rgba(0,0,0,.6); word-break: break-word; }
+  .sub { text-align: center; font-size: 13px; color: var(--ink-2); min-height: 18px; }
+  .plaque {
+    margin: 14px auto 0; width: fit-content; max-width: 100%; padding: 6px 12px; border-radius: 6px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .02em;
+    color: var(--marigold-2); background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.07); box-shadow: inset 0 1px 2px rgba(0,0,0,.6);
+  }
+  .reason { font-size: 13.5px; color: var(--ink-2); margin: 14px 0 0; text-align: center; }
+  .epitaph { font-family: var(--serif); font-style: italic; font-size: 16px; color: #fff; margin: 10px 0 0; text-align: center; }
   details { margin-top: 14px; }
-  summary { cursor: pointer; color: var(--ink-2); font-size: 14px; }
-  footer { border-top: 1px solid rgba(255,255,255,.08); padding: 28px 16px 40px; color: var(--ink-3); font-size: 13px; text-align: center; }
-  footer a { color: var(--ink-2); }
-  @media (max-width: 640px) { h1 { max-width: 100%; } .cta .btn { width: 100%; text-align: center; } }
+  summary { list-style: none; cursor: pointer; font-size: 12px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸"; font-size: 10px; transition: transform .15s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  .paths { margin: 8px 0 0; padding: 0; list-style: none; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .paths li { word-break: break-all; padding: 3px 0; border-top: 1px dashed rgba(255,255,255,.07); display: flex; justify-content: space-between; gap: 10px; }
+  .paths li span:last-child { white-space: nowrap; color: var(--ink-2); }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.07); }
+  .conf { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .btn { border-radius: 9px; padding: 8px 14px; font-size: 13px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: var(--ink); transition: all .15s; }
+  .btn:hover { background: rgba(255,255,255,.1); }
+  .btn.bury { background: linear-gradient(180deg, var(--marigold-2), var(--marigold)); color: #2a1600; border-color: #b86d00; font-weight: 600; }
+  .btn.bury:hover { filter: brightness(1.07); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; filter: none; }
+
+  /* candle + marigolds, only on the dead */
+  .candle { position: absolute; top: 2px; right: 26px; width: 11px; height: 30px; border-radius: 3px; background: linear-gradient(90deg, #e9dcb8, #fbf3dc 50%, #cdbf9a); box-shadow: 0 2px 4px rgba(0,0,0,.6); z-index: 2; }
+  .candle::before { content: ""; position: absolute; left: 50%; top: -5px; width: 2px; height: 6px; margin-left: -1px; background: #222; }
+  .flame { position: absolute; left: 50%; top: -20px; width: 11px; height: 18px; margin-left: -5.5px; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+    background: radial-gradient(circle at 50% 75%, #fff7c4 0%, #ffd34d 35%, var(--marigold-3) 70%, transparent 72%);
+    box-shadow: 0 0 16px 5px rgba(255,170,40,.45); transform-origin: 50% 100%; animation: flicker 1.4s ease-in-out infinite alternate; }
+  @keyframes flicker { 0% { transform: scale(1, 1) rotate(-3deg); } 50% { transform: scale(.94, 1.1) rotate(2deg); } 100% { transform: scale(1.05, .96) rotate(-1deg); } }
+  .marigolds { position: absolute; top: 10px; left: 22px; z-index: 2; display: flex; gap: -4px; }
+  .mg { width: 22px; height: 22px; border-radius: 50%; margin-right: -6px;
+    background: radial-gradient(circle at 50% 50%, #ffe08a 0 18%, var(--marigold) 20% 48%, var(--marigold-3) 50% 72%, #b8480a 74% 100%);
+    box-shadow: 0 0 0 2px var(--stone-1), 0 2px 4px rgba(0,0,0,.5); }
+  .mg:nth-child(2) { width: 17px; height: 17px; margin-top: 8px; }
+  .mg:nth-child(3) { width: 14px; height: 14px; margin-top: -4px; }
+  @media (prefers-reduced-motion: reduce) { .flame, .fog { animation: none !important; } }
+
+  /* ---------- living / protected table ---------- */
+  .table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .table th { text-align: left; font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .table td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top; }
+  .table td.n { font-family: var(--serif); font-size: 15px; color: var(--ink); }
+  .table td.m { font-family: var(--mono); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+  .table td.p { font-family: var(--mono); font-size: 11px; color: var(--ink-3); word-break: break-all; }
+  .table .tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: rgba(56,201,180,.12); color: var(--teal); }
+  .table .tag.gray { background: rgba(255,255,255,.06); color: var(--ink-3); }
+  .table .tag.moss { background: rgba(95,140,90,.18); color: #9fd39a; }
+  .more { margin-top: 12px; }
+
+  .empty { text-align: center; padding: 70px 20px; color: var(--ink-3); font-family: var(--serif); font-size: 19px; }
+  .empty small { display: block; font-family: var(--sans); font-size: 13px; margin-top: 8px; }
+
+  /* ---------- sticky bury bar ---------- */
+  .dock {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(120%); z-index: 20;
+    display: flex; align-items: center; gap: 14px; padding: 10px 10px 10px 18px; border-radius: 14px;
+    background: rgba(30, 26, 42, .92); border: 1px solid rgba(255,159,28,.45); box-shadow: 0 20px 50px rgba(0,0,0,.6); backdrop-filter: blur(10px);
+    transition: transform .22s; max-width: calc(100vw - 32px);
+  }
+  .dock.show { transform: translateX(-50%) translateY(0); }
+  .dock .t { font-size: 14px; color: var(--ink); }
+  .dock .t b { font-family: var(--serif); font-weight: 400; color: var(--marigold-2); }
+
+  footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 40px; font-size: 13px; color: var(--ink-3); }
+  footer .line { border-top: 1px solid rgba(255,255,255,.07); padding-top: 18px; }
+  footer code { font-family: var(--mono); color: var(--ink-2); }
+  .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%) translateY(16px); opacity: 0; background: #f6f1e6; color: #1a1626; padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 30; transition: all .2s; max-width: 90vw; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 640px) {
+    .moon { right: 12px; top: 54px; }
+    .yard { grid-template-columns: 1fr; }
+    .table td.p, .table th.p { display: none; }
+  }
+
+  /* welcome / scan panel */
+  .start { margin-top: 26px; max-width: 640px; padding: 20px 22px 22px; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; background: rgba(13,11,18,.6); backdrop-filter: blur(6px); }
+  .start[hidden] { display: none; }
+  .start .model { margin: 0 0 14px; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+  .start .model::before { content: '●'; margin-right: 8px; }
+  .start .model.ok::before { color: #7fd18a; } .start .model.warn::before { color: var(--marigold-2); } .start .model.bad::before { color: #e5736b; }
+  .start .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn.big { padding: 12px 20px; font-size: 15px; border-radius: 12px; }
+  .prog[hidden] { display: none; }
+  .prog .bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; margin-top: 18px; }
+  .prog .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--marigold-3), var(--marigold-2)); transition: width .4s; }
+  .prog .bar.indet i { width: 30%; animation: slide 1.3s infinite linear; }
+  @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(400%); } }
+  .prog .stage { margin: 10px 0 0; font-size: 13px; color: var(--ink-2); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prog .note { margin: 6px 0 0; font-size: 12px; color: var(--ink-3); }
+  .rescan { margin-left: 10px; vertical-align: middle; padding: 4px 10px; font-size: 12px; }
+
+  /* setup (public page, helper not running yet) */
+  .setup[hidden] { display: none; }
+  .setup { margin-top: 26px; max-width: 980px; }
+  .setup-lede { font-size: 15px; color: var(--ink-2); margin: 0 0 24px; max-width: 680px; }
+  .setup code { font-family: var(--mono); font-size: 12.5px; background: rgba(0,0,0,.35); padding: 2px 6px; border-radius: 6px; color: var(--marigold-2); }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; counter-reset: s; }
+  .step { position: relative; padding: 22px 18px 18px; border-radius: 14px; background: linear-gradient(180deg, var(--stone-1), var(--stone-2)); border: 1px solid var(--stone-edge); box-shadow: 0 20px 40px -24px #000; }
+  .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 16px; width: 28px; height: 28px; border-radius: 50%; background: var(--marigold); color: #2a1600; font-weight: 700; display: grid; place-items: center; font-size: 13px; border: 3px solid var(--sky-1); }
+  .step h3 { margin: 2px 0 8px; font-family: var(--serif); font-weight: 400; font-size: 19px; }
+  .step p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+  .step p + p { margin-top: 10px; }
+  .step a.btn { text-decoration: none; display: inline-block; }
+  .os { display: inline-flex; gap: 6px; flex-wrap: wrap; vertical-align: middle; }
+  .os span { font-size: 12px; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); color: var(--ink-3); font-family: var(--mono); }
+  .os span.on { border-color: var(--marigold); color: var(--marigold-2); background: rgba(255,159,28,.12); }
+  .waiting { margin: 22px 0 0; font-size: 13.5px; color: var(--ink-3); display: flex; gap: 10px; align-items: center; }
+  .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.15); border-top-color: var(--marigold-2); animation: spin 1s linear infinite; flex: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -117,10 +253,25 @@
     <p class="eyebrow">Ghost in the machine</p>
     <h1>APP GRAVEYARD</h1>
     <p class="tagline">The apps you uninstalled left ghosts behind.</p>
-    <p class="lede">Every app you ever removed left caches, preferences and logs on your disk. App Graveyard finds them, asks an open-weight model running <b>on your own computer</b> what each one was, and gives every dead app a tombstone. Bury moves its folders to a quarantine. Restore brings them back. Nothing is ever deleted.</p>
-    <div class="cta">
-      <a class="btn primary" id="download" href="https://github.com/raushanichaudhary77-create/app-graveyard/archive/refs/heads/main.zip">Download App Graveyard<small>ZIP, about 1 MB · macOS, Windows, Linux</small></a>
-      <a class="btn" href="https://github.com/raushanichaudhary77-create/app-graveyard">Source on GitHub</a>
+    <p class="verdict" id="verdict">Reading the last report…</p>
+    <p class="meta" id="meta"></p>
+    <section class="setup" id="setup" hidden>
+      <p class="setup-lede">This page runs the scan on <b>your</b> computer through a tiny helper you run once. Nothing is uploaded; the page only talks to <code>127.0.0.1</code>.</p>
+      <div class="steps">
+        <div class="step"><h3>Install Python 3</h3><p>macOS and most Linux already have it. On Windows, get it from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> and tick <b>Add python.exe to PATH</b>.</p></div>
+        <div class="step"><h3>Install Ollama</h3><p>From <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a>. Open it once. It runs the AI model on your machine; the model itself is downloaded from this page later, one click.</p></div>
+        <div class="step"><h3>Run the helper</h3><p><a class="btn bury" href="https://github.com/raushanichaudhary77-create/app-graveyard/archive/refs/heads/main.zip">Download the helper (ZIP, 1 MB)</a></p><p>Unzip it and double-click <span class="os" id="os"><span data-os="mac">App Graveyard.command</span><span data-os="win">App Graveyard.bat</span><span data-os="linux">app-graveyard.sh</span></span>. Keep its small window open. On macOS, if the first double-click is refused, right-click the file and choose Open.</p></div>
+      </div>
+      <p class="waiting"><span class="spin"></span> Waiting for the helper on this computer… this page connects by itself the moment it starts. If the browser asks to allow access to your local network, allow it.</p>
+    </section>
+    <div class="start" id="start" hidden>
+      <p class="model" id="modelLine"></p>
+      <div class="actions" id="startActions"></div>
+      <div class="prog" id="prog" hidden>
+        <div class="bar" id="progBarWrap"><i id="progBar"></i></div>
+        <p class="stage" id="progStage"></p>
+        <p class="note" id="progNote"></p>
+      </div>
     </div>
   </div>
   <div class="horizon" aria-hidden="true">
@@ -136,81 +287,308 @@
 </header>
 
 <main>
-  <h2>Get started in four steps</h2>
-  <p class="sub">No terminal needed. Steps 1 and 2 are one-time installs; after that, everything runs offline.</p>
-  <div class="steps">
-    <div class="step">
-      <h3>Install Python 3</h3>
-      <p>macOS and most Linux already have it. On Windows, get it from <a href="https://www.python.org/downloads/">python.org</a> and tick <b>Add python.exe to PATH</b> in the installer.</p>
+  <div class="wrap">
+    <div class="filters" id="filters" role="tablist" aria-label="Filter"></div>
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Search names, vendors, paths…" aria-label="Search">
+      <label class="check" id="allWrap"><input type="checkbox" id="all"> select everything shown</label>
+      <span class="grow"></span>
+      <span class="section-sub" id="hint" style="margin:0"></span>
     </div>
-    <div class="step">
-      <h3>Install Ollama</h3>
-      <p>Download it from <a href="https://ollama.com">ollama.com</a> and open it once. It is the small program that runs the AI model on your machine.</p>
-      <p>The model itself (Gemma 3, about 3 GB) is downloaded from inside App Graveyard the first time, one click.</p>
-    </div>
-    <div class="step">
-      <h3>Download and double-click</h3>
-      <p>Unzip the download, open the folder, and double-click the launcher for your system:</p>
-      <div class="os" id="os"><span data-os="mac">App Graveyard.command</span><span data-os="win">App Graveyard.bat</span><span data-os="linux">app-graveyard.sh</span></div>
-      <p style="margin-top:10px">A small window stays open and the graveyard opens in your browser. On macOS, if the first double-click is refused, right-click the file and choose <b>Open</b>.</p>
-    </div>
-    <div class="step">
-      <h3>Press Scan this machine</h3>
-      <p>The page checks that the model is ready, then scans with a progress bar: a few seconds for the folders, a few minutes for the model.</p>
-      <p>Read every verdict, then bury what you agree with. Restore is one click away, always.</p>
-    </div>
+    <h2 class="section-title" id="title"></h2>
+    <p class="section-sub" id="subtitle"></p>
+    <section id="content" aria-live="polite"></section>
   </div>
-
-  <div class="shot"><img src="screenshot.png" alt="The App Graveyard page: a dark graveyard with one tombstone per dead app, each with a verdict, a reason and an epitaph." loading="lazy"></div>
-
-  <h2>Offline, private, reversible</h2>
-  <p class="sub">The three things that matter when a tool reads your application data.</p>
-  <div class="two">
-    <div class="card offline">
-      <h3>Works offline</h3>
-      <p>Internet is needed twice, ever: to download this app and to download the model. After that the scan, the model and the page all run on <code>127.0.0.1</code>. Unplug the network and it still works.</p>
-    </div>
-    <div class="card">
-      <h3>Nothing leaves your computer</h3>
-      <p>The list of apps you have used is a profile of you. The only network call in the code is to Ollama on localhost. No API key, no account, no telemetry.</p>
-    </div>
-    <div class="card">
-      <h3>Never deletes</h3>
-      <p>Bury is a move, not a delete. Folders go to <code>~/.app-graveyard/quarantine/</code> with a manifest that records where each one came from. Restore puts them back exactly.</p>
-    </div>
-    <div class="card">
-      <h3>Rules first, model last</h3>
-      <p>Operating-system folders are protected and can never be buried. Folders of installed apps are matched without AI. Only what nothing can explain goes to the model, four apps at a time, and a low-confidence verdict is marked unsure rather than ghost.</p>
-    </div>
-  </div>
-
-  <h2 class="how">Prefer a terminal?</h2>
-  <p class="sub">Same thing, typed.</p>
-  <pre><b>ollama pull gemma3:4b</b>                    # one time; gemma3:1b is faster on small machines
-<b>git clone https://github.com/raushanichaudhary77-create/app-graveyard</b>
-<b>cd app-graveyard</b>
-<b>python -m appgraveyard</b>                   # scan, consult the model, open the graveyard
-<b>python -m appgraveyard open</b>              # just open the page and scan from there</pre>
-  <details>
-    <summary>More commands</summary>
-    <pre style="margin-top:10px">python -m appgraveyard scan          # scan only, print a summary
-python -m appgraveyard serve         # reopen the last report
-python -m appgraveyard buried        # list everything in quarantine
-python -m appgraveyard restore ID    # put a buried app back
-python -m appgraveyard --no-model    # skip the model, judge by idle time only
-GRAVEYARD_MODEL=gemma3:1b python -m appgraveyard   # use a different local model</pre>
-  </details>
 </main>
 
 <footer>
-  Built for the dev.to Hacktoberfest Open-Source AI Challenge, week 4: Ghost in the Machine. MIT licence. Python standard library and <a href="https://ollama.com">Ollama</a> with <a href="https://ai.google.dev/gemma">Gemma 3</a>. <a href="https://github.com/raushanichaudhary77-create/app-graveyard">GitHub</a>
+  <div class="line">
+    <div id="footnote"></div>
+    <div style="margin-top:8px">Nothing is deleted. <b>Bury</b> moves an app's folders to <code id="qpath">~/.app-graveyard/quarantine</code>; <b>Restore</b> puts them back exactly where they were.</div>
+  </div>
 </footer>
+
+<div class="dock" id="dock">
+  <span class="t" id="dockText"></span>
+  <button class="btn" id="dockClear">Clear</button>
+  <button class="btn bury" id="dockBury">Bury selected</button>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
 <script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  // Served by the local helper (same origin) or by GitHub Pages (talks to the helper on 127.0.0.1:7777).
+  let API = null, connected = false;
+  async function resolveApi() {
+    if (API !== null) return;
+    const loop = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+    if (loop) { try { const r = await fetch('/api/status', { cache: 'no-store' }); if (r.ok) { API = ''; connected = true; return; } } catch (e) {} }
+    API = 'http://127.0.0.1:7777';
+  }
+  let report = null, filter = 'ghost', selected = new Set(), showAll = false;
+
+  const LABELS = {
+    ghost: ['Ghosts', 'Apps that are gone. Their data is still here.'],
+    unsure: ['Unsure', 'The model would not swear to these. Look before you bury.'],
+    keep: ['Keep', 'Not installed as apps, but still in use: caches, shared services, developer tools.'],
+    living: ['Living', 'Belong to an app that is still installed.'],
+    protected: ['Protected', 'Belong to the operating system. Never buried.'],
+    buried: ['Buried', 'Moved to quarantine. Restore any time.'],
+  };
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const human = (n) => n >= 1073741824 ? (n/1073741824).toFixed(2)+' GB' : n >= 1048576 ? (n/1048576).toFixed(1)+' MB' : n >= 1024 ? (n/1024).toFixed(0)+' KB' : n+' B';
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2800); }
+
+  function renderHero() {
+    const t = report.totals;
+    let v;
+    if (report.fallback) v = `${report.skipped ? 'The scan ran without the model' : 'The scan finished, but no local model was reachable'}, so nothing could be declared dead. <b>${t.unsure}</b> leftover${t.unsure === 1 ? ' is' : 's are'} waiting for a verdict.`;
+    else if (t.ghosts === 0) v = `No ghosts. ${t.scanned.toLocaleString()} leftovers checked and every one belongs to something still alive.`;
+    else v = `<b>${t.ghosts} app${t.ghosts === 1 ? '' : 's'}</b> you no longer have ${t.ghosts === 1 ? 'is' : 'are'} still haunting <b>${t.ghost_size}</b> of this ${esc(report.platform)}${t.unsure ? `, and <b>${t.unsure}</b> more might be` : ''}.`;
+    $('#verdict').innerHTML = v;
+    const model = report.model ? `<code>${esc(report.model)}</code> running locally` : 'no model, idle-time heuristic';
+    $('#meta').innerHTML = `${t.scanned.toLocaleString()} leftovers · ${(t.apps_seen || t.scanned).toLocaleString()} apps · ${t.installed_apps} installed · ${report.scan_seconds}s · verdicts by ${model} · ${esc(report.generated_at)}`;
+    { $('#meta').insertAdjacentHTML('beforeend', ' <button class="btn rescan" id="rescan">Scan again</button>'); $('#rescan').onclick = () => { showStart(); window.scrollTo({ top: 0, behavior: 'smooth' }); }; }
+    $('#footnote').textContent = report.fallback
+      ? (report.skipped ? 'This scan skipped the model. Scan again with it for real verdicts.' : 'The local model was not reachable during this scan. Start Ollama and scan again for real verdicts.')
+      : `Verdicts come from ${report.model}, an open-weight model running through Ollama on this machine. No folder name, path or file left this computer.`;
+  }
+
+  function renderFilters() {
+    const t = report.totals;
+    const defs = [['ghost', t.ghosts, t.ghost_size], ['unsure', t.unsure, t.unsure_size], ['keep', t.keep, ''], ['living', t.living, ''], ['protected', t.protected, ''], ['buried', t.buried, '']];
+    $('#filters').innerHTML = defs.map(([k, n, s]) =>
+      `<button class="chip ${k} ${filter === k ? 'active' : ''}" data-k="${k}" role="tab" aria-selected="${filter === k}"><span class="dot"></span><span class="n">${n}</span>${LABELS[k][0]}${s && n ? `<span class="s">${esc(s)}</span>` : ''}</button>`).join('');
+    document.querySelectorAll('.chip').forEach(el => el.onclick = () => { filter = el.dataset.k; selected.clear(); showAll = false; render(); });
+  }
+
+  function visible() {
+    const q = $('#q').value.trim().toLowerCase();
+    return report.items.filter(e => e.status === filter && (!q || [e.name, e.product, e.vendor, e.path, e.reason, e.matched_app, ...(e.parts || []).map(p => p.path)].join(' ').toLowerCase().includes(q)));
+  }
+
+  function stone(e) {
+    const st = e.status;
+    const head = st === 'ghost' ? 'R · I · P' : st === 'buried' ? 'BURIED' : 'UNSURE';
+    const junk = /^(unknown|ghost|keep|unsure|none|n\/a)$/i;
+    const sub = [e.vendor, e.category].filter(x => x && !junk.test(x)).join(' · ');
+    // the model names "Microsoft Edge Beta" and "Microsoft Edge" alike; when products collide, the folder name tells them apart
+    const prod = e.product && !junk.test(e.product) ? e.product : e.name;
+    const title = report.items.some(o => o !== e && o.status === e.status && (o.product || o.name) === (e.product || e.name)) ? e.name : prod;
+    const parts = e.parts || [{ path: e.path, bytes: e.bytes }];
+    const plaque = `${e.first_seen || '?'} — ${e.last_modified || '?'} · ${e.size}${e.files ? ' · ' + e.files.toLocaleString() + ' file' + (e.files === 1 ? '' : 's') : ''}`;
+    const canPick = st === 'ghost' || st === 'unsure';
+    const action = st === 'buried' ? `<button class="btn" data-restore="${esc(e.id)}">Restore</button>` : (canPick ? `<button class="btn bury" data-bury="${esc(e.id)}">Bury</button>` : '');
+    const deco = st === 'ghost' ? `<div class="marigolds" aria-hidden="true"><span class="mg"></span><span class="mg"></span><span class="mg"></span></div><div class="candle" aria-hidden="true"><div class="flame"></div></div>` : st === 'buried' ? `<div class="marigolds" aria-hidden="true"><span class="mg"></span></div>` : '';
+    return `<article class="plot ${st} ${selected.has(e.id) ? 'selected' : ''}" data-id="${esc(e.id)}">
+      ${deco}
+      <div class="stone">
+        <div class="engrave">${head}</div>
+        <div class="name">${esc(title)}</div>
+        <div class="sub">${esc(sub)}</div>
+        <div class="plaque">${esc(plaque)}</div>
+        ${e.reason ? `<p class="reason">${esc(e.reason)}</p>` : ''}
+        ${e.epitaph ? `<p class="epitaph">“${esc(e.epitaph)}”</p>` : ''}
+        <details><summary>${parts.length} folder${parts.length === 1 ? '' : 's'} on disk</summary>
+          <ul class="paths">${parts.map(p => `<li><span>${esc(p.path)}</span><span>${human(p.bytes || 0)}</span></li>`).join('')}</ul></details>
+        <div class="foot">
+          ${canPick ? `<label class="check"><input type="checkbox" data-pick="${esc(e.id)}" ${selected.has(e.id) ? 'checked' : ''}> select</label>` : '<span></span>'}
+          <span style="display:flex;align-items:center;gap:12px">${e.confidence != null ? `<span class="conf">${Math.round(e.confidence * 100)}% sure</span>` : ''}${action}</span>
+        </div>
+      </div>
+      <div class="ground"></div>
+    </article>`;
+  }
+
+  function table(items) {
+    const rows = (showAll ? items : items.slice(0, 60)).map(e => {
+      const tag = e.status === 'living' ? `<span class="tag">${esc(e.matched_app || 'installed')}</span>` : e.status === 'keep' ? `<span class="tag moss">${esc(e.category || 'keep')}</span>` : `<span class="tag gray">OS</span>`;
+      const why = e.status === 'keep' ? esc(e.reason) : '';
+      return `<tr><td class="n">${esc(e.product && e.product !== 'Unknown' ? e.product : e.name)}</td><td>${tag}${why ? `<div style="font-size:12px;color:var(--ink-3);margin-top:3px">${why}</div>` : ''}</td><td class="m">${esc(e.size)}</td><td class="m">${esc(e.last_modified || '')}</td><td class="p">${(e.parts || []).map(p => esc(p.path)).join('<br>')}</td></tr>`;
+    }).join('');
+    const more = items.length > 60 && !showAll ? `<button class="btn more" id="more">Show all ${items.length}</button>` : '';
+    return `<table class="table"><thead><tr><th>App</th><th>Why it stays</th><th>Size</th><th>Last touched</th><th class="p">Where</th></tr></thead><tbody>${rows}</tbody></table>${more}`;
+  }
+
+  function render() {
+    renderHero(); renderFilters();
+    const items = visible();
+    $('#title').textContent = LABELS[filter][0];
+    $('#subtitle').textContent = LABELS[filter][1];
+    const grid = filter === 'ghost' || filter === 'unsure' || filter === 'buried';
+    const c = $('#content');
+    if (!items.length) {
+      c.innerHTML = `<div class="empty">${filter === 'ghost' ? (report.fallback ? 'No verdicts yet.' : 'No ghosts here.') : 'Nothing here.'}<small>${filter === 'ghost' && report.fallback ? 'Start Ollama and run the scan again.' : ''}</small></div>`;
+    } else if (grid) {
+      c.innerHTML = `<div class="yard">${items.map(stone).join('')}</div>`;
+    } else {
+      c.innerHTML = table(items);
+      const m = $('#more'); if (m) m.onclick = () => { showAll = true; render(); };
+    }
+    c.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { cb.checked ? selected.add(cb.dataset.pick) : selected.delete(cb.dataset.pick); cb.closest('.plot').classList.toggle('selected', cb.checked); updateDock(); });
+    c.querySelectorAll('[data-bury]').forEach(b => b.onclick = () => bury([b.dataset.bury]));
+    c.querySelectorAll('[data-restore]').forEach(b => b.onclick = () => restore(b.dataset.restore));
+    $('#allWrap').style.visibility = grid && filter !== 'buried' ? 'visible' : 'hidden';
+    updateDock();
+  }
+
+  function updateDock() {
+    const n = selected.size;
+    const bytes = report.items.filter(e => selected.has(e.id)).reduce((a, e) => a + (e.bytes || 0), 0);
+    $('#dockText').innerHTML = `<b>${n}</b> selected · <b>${human(bytes)}</b>`;
+    $('#dock').classList.toggle('show', n > 0);
+  }
+
+  const gone = (err) => err instanceof TypeError;  // "Failed to fetch": the helper is not running
+  function lost() { report = null; showSetup(); toast('The helper on this computer stopped. Start it again and this page reconnects by itself.'); }
+  async function post(url, body) {
+    let r;
+    try { r = await fetch(API + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+    catch (err) { if (gone(err)) lost(); throw err; }
+    const j = await r.json();
+    if (!r.ok || j.error) throw new Error(j.error || r.statusText);
+    return j;
+  }
+  async function bury(ids) {
+    try {
+      const j = await post('/api/bury', { ids });
+      j.buried.forEach(b => { const e = report.items.find(x => x.id === b.id); if (e) e.status = 'buried'; });
+      report.totals = j.totals; ids.forEach(i => selected.delete(i));
+      toast(`${j.buried.length} app${j.buried.length === 1 ? '' : 's'} laid to rest in quarantine. Restore any time.`);
+      render();
+    } catch (err) { toast('Could not bury: ' + err.message); }
+  }
+  async function restore(id) {
+    try {
+      const j = await post('/api/restore', { id });
+      const e = report.items.find(x => x.id === id); if (e) e.status = e.verdict === 'ghost' ? 'ghost' : 'unsure';
+      report.totals = j.totals; toast('Restored ' + (Array.isArray(j.restored) ? j.restored.length + ' folder(s)' : j.restored)); render();
+    } catch (err) { toast('Could not restore: ' + err.message); }
+  }
+
+  $('#q').oninput = render;
+  $('#all').onchange = (ev) => { visible().forEach(e => ev.target.checked ? selected.add(e.id) : selected.delete(e.id)); render(); };
+  $('#dockBury').onclick = () => bury([...selected]);
+  $('#dockClear').onclick = () => { selected.clear(); render(); };
+
+  // ---- welcome panel: scan from the page, no terminal needed ----
+  let status = null, pollTimer = null, pollFails = 0;
+  async function fetchStatus() {
+    const r = await fetch(API + '/api/status', { cache: 'no-store' });
+    if (!r.ok) throw new Error('status ' + r.status);
+    status = await r.json();
+    return status;
+  }
+  function modelLine() {
+    const o = status.ollama, el = $('#modelLine');
+    if (o.running && o.model_present) { el.className = 'model ok'; el.innerHTML = `<b>${esc(o.model)}</b> is ready in Ollama on this machine. Verdicts stay on this computer; no internet needed.`; }
+    else if (o.running) { el.className = 'model warn'; el.innerHTML = `Ollama is running but <b>${esc(o.model)}</b> is not downloaded yet. Download it once (about 3 GB), after that everything works offline.`; }
+    else { el.className = 'model bad'; el.innerHTML = `Ollama is not running. Install it from <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a>, open it, and reload this page. You can also scan without the model: folders still get sorted, but nothing is declared dead.`; }
+  }
+  function startActions() {
+    const o = status.ollama, a = $('#startActions');
+    const has = !!report;
+    let h = '';
+    if (o.running && o.model_present) h += `<button class="btn bury big" id="doScan">${has ? 'Scan again' : 'Scan this machine'}</button>`;
+    else if (o.running) h += `<button class="btn bury big" id="doPull">Download ${esc(o.model)}</button>`;
+    h += `<button class="btn ${o.running && o.model_present ? '' : 'big'}" id="doScanNoModel">Scan without the model</button>`;
+    if (has) h += `<button class="btn" id="doCancel">Back to results</button>`;
+    a.innerHTML = h;
+    const sc = $('#doScan'); if (sc) sc.onclick = () => startJob('/api/scan', { use_model: true });
+    const pl = $('#doPull'); if (pl) pl.onclick = () => startJob('/api/pull', {});
+    $('#doScanNoModel').onclick = () => startJob('/api/scan', { use_model: false });
+    const cx = $('#doCancel'); if (cx) cx.onclick = hideStart;
+  }
+  function showStart() {
+    if (!status) return;
+    modelLine(); startActions();
+    $('#start').hidden = false;
+    $('#prog').hidden = status.job.status !== 'running';
+    if (!report) {
+      $('#verdict').textContent = 'Nothing has been read yet.';
+      $('#meta').textContent = 'One click scans the application-data folders of this computer. Read-only: nothing moves until you bury it.';
+      document.querySelector('main').style.display = 'none';
+    }
+  }
+  function hideStart() { $('#start').hidden = true; if (report) { document.querySelector('main').style.display = ''; render(); } }
+  async function startJob(url, body) {
+    try {
+      const r = await fetch(API + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const j = await r.json();
+      if (!j.started) throw new Error(j.error || 'already running');
+      $('#startActions').innerHTML = '';
+      $('#prog').hidden = false;
+      poll();
+    } catch (err) { if (gone(err)) lost(); else toast('Could not start: ' + err.message); }
+  }
+  function paintProgress(job) {
+    const wrap = $('#progBarWrap'), bar = $('#progBar');
+    const pct = job.total ? Math.round(100 * job.done / job.total) : 0;
+    wrap.classList.toggle('indet', !job.total);
+    bar.style.width = (job.total ? pct : 30) + '%';
+    let stage = job.stage || '';
+    if (job.kind === 'pull') stage = (job.detail || stage) + (job.total ? ` ${human(job.done)} / ${human(job.total)}` : '');
+    else if (job.total) stage = `${stage} ${job.done}/${job.total}  ${job.detail || ''}`;
+    else if (job.detail) stage = `${stage}  ${job.detail}`;
+    $('#progStage').textContent = stage;
+    $('#progNote').textContent = job.kind === 'scan' && /consult/.test(job.stage) ? 'The model judges four apps at a time. On a small laptop this is the slow part, a few minutes.' : job.kind === 'pull' ? 'One-time download through Ollama. Keep this page open.' : '';
+  }
+  async function poll() {
+    clearTimeout(pollTimer);
+    try { await fetchStatus(); pollFails = 0; } catch (e) { if (++pollFails >= 4) { lost(); return; } pollTimer = setTimeout(poll, 1500); return; }
+    const job = status.job;
+    if (job.status === 'running') { paintProgress(job); pollTimer = setTimeout(poll, 700); return; }
+    $('#prog').hidden = true;
+    if (job.status === 'error') { toast(job.error || 'The job failed.'); showStart(); return; }
+    if (job.status === 'done' && job.kind === 'pull') { toast('Model downloaded. Ready to scan.'); showStart(); return; }
+    if (job.status === 'done') { await load(true); toast('Scan finished.'); }
+  }
+
+  let setupTimer = null;
+  function showSetup() {
+    connected = false;
+    $('#verdict').textContent = 'Nothing has been read yet.';
+    $('#meta').textContent = 'Three one-time steps below, then this page scans your computer.';
+    $('#start').hidden = true;
+    $('#setup').hidden = false;
+    document.querySelector('main').style.display = 'none';
+    clearTimeout(setupTimer);
+    setupTimer = setTimeout(load, 3000);
+  }
+  function hideSetup() { clearTimeout(setupTimer); $('#setup').hidden = true; if (!connected) { connected = true; toast('Connected to App Graveyard on this computer.'); } }
+
+  async function load(afterScan) {
+    await resolveApi();
+    try {
+      const r = await fetch(API + '/api/report', { cache: 'no-store' });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error);
+      report = j;
+    } catch (e) {
+      report = null;
+      try { await fetchStatus(); } catch (e2) { showSetup(); return; }
+      hideSetup();
+      showStart();
+      if (status.job.status === 'running') poll();
+      return;
+    }
+    hideSetup();
+    if (report.quarantine) $('#qpath').textContent = report.quarantine;
+    selected.clear();
+    hideStart();
+    render();
+    try { await fetchStatus(); } catch (e) { return; }
+    if (status.job.status === 'running' && !afterScan) { showStart(); poll(); }
+  }
   (function () {
     const ua = navigator.userAgent, p = navigator.platform || '';
     const os = /Win/.test(p) || /Windows/.test(ua) ? 'win' : /Mac/.test(p) ? 'mac' : /Linux/.test(p) ? 'linux' : null;
-    if (os) document.querySelectorAll('#os span').forEach(s => s.classList.toggle('on', s.dataset.os === os));
+    if (os) document.querySelectorAll('#os span').forEach(el => el.classList.toggle('on', el.dataset.os === os));
   })();
+  load();
+})();
 </script>
 </body>
 </html>

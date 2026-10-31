@@ -13,6 +13,9 @@ from .scan import human
 HOME_DIR = quarantine.HOME_DIR
 REPORT = HOME_DIR / "report.json"
 UI_DIR = Path(__file__).parent / "ui"
+# The public page on GitHub Pages talks to this helper. Only that origin (and a local copy) may.
+SITE = "https://raushanichaudhary77-create.github.io"
+ALLOWED_ORIGINS = {SITE, os.environ.get("GRAVEYARD_ORIGIN", SITE), "null"}
 
 
 def build(entries, meta, apps_count, seconds, raw_count=None):
@@ -76,6 +79,25 @@ class Handler(SimpleHTTPRequestHandler):
 
     def log_message(self, *a):
         pass
+
+    def _cors(self):
+        origin = self.headers.get("Origin")
+        if origin and origin in ALLOWED_ORIGINS:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Access-Control-Allow-Private-Network", "true")
+            self.send_header("Access-Control-Max-Age", "600")
+
+    def end_headers(self):
+        self._cors()
+        super().end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _json(self, code, obj):
         body = json.dumps(obj).encode()

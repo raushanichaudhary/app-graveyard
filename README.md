@@ -14,17 +14,11 @@ No cloud, no API key, no telemetry. The only network call is to `127.0.0.1:11434
 
 ## Run it
 
-Two things need to be on the machine: Python 3.9+ (Windows: [python.org](https://www.python.org/downloads/), tick "Add python to PATH"; macOS and most Linux already have it) and [Ollama](https://ollama.com), opened once.
+**Open the site: https://raushanichaudhary77-create.github.io/app-graveyard/**
 
-**The no-terminal way.** Download this repo (green Code button, Download ZIP, unzip) and double-click the launcher for your OS:
+The page is the app. It walks you through three one-time steps (install Python 3, install Ollama, download and double-click the 1 MB helper), then connects to that helper on `127.0.0.1:7777` by itself and does everything else from the page: checks the model, downloads it once if needed (about 3 GB through Ollama), scans with a progress bar, shows the graveyard, buries and restores. The helper only answers that page and `127.0.0.1`; no other website can talk to it.
 
-| OS | Double-click |
-| --- | --- |
-| macOS | `App Graveyard.command` (if macOS refuses the first time, right-click it and choose Open) |
-| Windows | `App Graveyard.bat` |
-| Linux | `app-graveyard.sh` |
-
-A terminal window opens and stays open, and the graveyard page opens in your browser. The page tells you whether the Gemma model is ready, offers a one-time **Download model** button if it is not (about 3 GB through Ollama), and then one **Scan this machine** button does the rest with a progress bar. After the model is downloaded, nothing needs the internet. If Ollama is not running at all, **Scan without the model** still sorts every folder; it just declares nothing dead.
+After the one-time downloads, nothing needs the internet: the helper serves the same page at http://127.0.0.1:7777/ when you double-click the launcher (`App Graveyard.command`, `App Graveyard.bat` or `app-graveyard.sh`).
 
 **The terminal way.**
 
@@ -65,7 +59,7 @@ Works on macOS, Windows and Linux. Only the folders differ:
 2. **Match** (`match.py`): no AI here. Folder names and bundle ids are tokenised and compared against the installed-app list. A word shared by three or more installed apps (`microsoft`, `google`) is treated as a vendor word and never proves an app is installed on its own, which is what stops a leftover Edge profile from hiding behind VS Code.
 3. **Protect** (`platforms.py`): anything that belongs to the OS is marked protected and can never be buried.
 4. **Consult** (`oracle.py`): the orphans, in batches of four, go to Gemma through Ollama's `/api/chat` with JSON output forced. For each folder the model returns product, vendor, category, a verdict (`ghost`, `keep`, `unsure`), a confidence, a one-line reason and an epitaph. A "ghost" verdict under 60% confidence is downgraded to "unsure", so the model never gets to bury on a coin flip.
-5. **Graveyard** (`report.py`, `job.py`, `ui/index.html`): a local page with one tombstone per dead app. The page can also start a scan or a model download itself (`/api/scan`, `/api/pull`, `/api/status`), so the launchers never need a typed command. Bury moves the folder to `~/.app-graveyard/quarantine/<timestamp>/`; Restore moves it back.
+5. **Graveyard** (`report.py`, `job.py`, `ui/index.html`): one page, served by the helper locally and published unchanged on GitHub Pages (`docs/index.html` is a copy), with one tombstone per dead app. The page can also start a scan or a model download itself (`/api/scan`, `/api/pull`, `/api/status`), so the launchers never need a typed command. Bury moves the folder to `~/.app-graveyard/quarantine/<timestamp>/`; Restore moves it back.
 
 If Ollama is not running, the scan still completes using an idle-time heuristic and the page says so. Nothing is promoted to "ghost" without the model.
 
