@@ -18,8 +18,7 @@ It runs on macOS, Windows and Linux, offline, with no API key. The only network 
 
 ![App Graveyard: one tombstone per dead app, with a verdict, a reason and an epitaph](https://raw.githubusercontent.com/raushanichaudhary77-create/app-graveyard/main/docs/screenshot.png)
 
-Landing page with the install steps: https://raushanichaudhary77-create.github.io/app-graveyard/
-Static replay of a real scan (no backend, burying disabled): https://raushanichaudhary77-create.github.io/app-graveyard/demo.html
+Install steps and download: https://raushanichaudhary77-create.github.io/app-graveyard/
 
 Double-click `App Graveyard.command` (or `App Graveyard.bat` on Windows), press **Scan this machine**, and watch the progress bar. Or from a terminal, a run on a one-month-old Mac:
 
@@ -58,7 +57,7 @@ Most of the work was not the model. It was stopping the model from being asked t
 - **Vendor words.** The first matcher saw "microsoft" in `Microsoft Edge Beta`, found "microsoft" in VS Code's bundle id, and declared Edge alive. Fix: a token shared by three or more installed apps is a vendor word and never proves anything on its own.
 - **Zoom was dead, apparently.** `ZoomChat.plist`, `ZoomPhone` and `zoomusinstall.log` never produced the token "zoom", so the model was told the product was not installed and, reasonably, called them ghosts. Fix: split CamelCase and match on prefixes, so `zoomus` finds `zoom.us`. Lesson: if the context you hand the model is wrong, a confident answer is worse than no answer.
 - **The model wanted to bury things it should not.** It called the pip cache and the Office group container ghosts, because no `.app` is named "pip". So two things never reach the model at all: caches of command-line developer tools, and shared containers of a developer team that still has apps installed. Rules first, model last.
-- **Where Gemma still gets it wrong.** It kept `com.clipy-app.Clipy` at 85% ("preferences may be reused"); Clipy is gone. It kept the main `Microsoft Edge` folder because other Microsoft apps are installed, while correctly burying Edge Beta, Dev and Canary one call earlier. Both are in the demo, unedited. A 4B model is a good intern, not an auditor, which is why every verdict is a move, not a delete.
+- **Where Gemma still gets it wrong.** It kept `com.clipy-app.Clipy` at 85% ("preferences may be reused"); Clipy is gone. It kept the main `Microsoft Edge` folder because other Microsoft apps are installed, while correctly burying Edge Beta, Dev and Canary one call earlier. Both are in the screenshot above, unedited. A 4B model is a good intern, not an auditor, which is why every verdict is a move, not a delete.
 - **Batches.** Six apps per call made the model skip or reorder items. Four per call, matched by name instead of position, with a single-item retry pass, dropped that to zero on this machine.
 
 ### The numbers

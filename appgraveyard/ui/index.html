@@ -290,7 +290,7 @@
 <script>
 (function () {
   const $ = (s) => document.querySelector(s);
-  let report = null, demo = false, filter = 'ghost', selected = new Set(), showAll = false;
+  let report = null, filter = 'ghost', selected = new Set(), showAll = false;
 
   const LABELS = {
     ghost: ['Ghosts', 'Apps that are gone. Their data is still here.'],
@@ -313,8 +313,8 @@
     else v = `<b>${t.ghosts} app${t.ghosts === 1 ? '' : 's'}</b> you no longer have ${t.ghosts === 1 ? 'is' : 'are'} still haunting <b>${t.ghost_size}</b> of this ${esc(report.platform)}${t.unsure ? `, and <b>${t.unsure}</b> more might be` : ''}.`;
     $('#verdict').innerHTML = v;
     const model = report.model ? `<code>${esc(report.model)}</code> running locally` : 'no model, idle-time heuristic';
-    $('#meta').innerHTML = `${t.scanned.toLocaleString()} leftovers · ${(t.apps_seen || t.scanned).toLocaleString()} apps · ${t.installed_apps} installed · ${report.scan_seconds}s · verdicts by ${model} · ${esc(report.generated_at)}${demo ? '<span class="pill">demo replay</span>' : ''}`;
-    if (!demo) { $('#meta').insertAdjacentHTML('beforeend', ' <button class="btn rescan" id="rescan">Scan again</button>'); $('#rescan').onclick = () => { showStart(); window.scrollTo({ top: 0, behavior: 'smooth' }); }; }
+    $('#meta').innerHTML = `${t.scanned.toLocaleString()} leftovers · ${(t.apps_seen || t.scanned).toLocaleString()} apps · ${t.installed_apps} installed · ${report.scan_seconds}s · verdicts by ${model} · ${esc(report.generated_at)}`;
+    { $('#meta').insertAdjacentHTML('beforeend', ' <button class="btn rescan" id="rescan">Scan again</button>'); $('#rescan').onclick = () => { showStart(); window.scrollTo({ top: 0, behavior: 'smooth' }); }; }
     $('#footnote').textContent = report.fallback
       ? (report.skipped ? 'This scan skipped the model. Scan again with it for real verdicts.' : 'The local model was not reachable during this scan. Start Ollama and scan again for real verdicts.')
       : `Verdicts come from ${report.model}, an open-weight model running through Ollama on this machine. No folder name, path or file left this computer.`;
@@ -343,8 +343,8 @@
     const title = report.items.some(o => o !== e && o.status === e.status && (o.product || o.name) === (e.product || e.name)) ? e.name : prod;
     const parts = e.parts || [{ path: e.path, bytes: e.bytes }];
     const plaque = `${e.first_seen || '?'} — ${e.last_modified || '?'} · ${e.size}${e.files ? ' · ' + e.files.toLocaleString() + ' file' + (e.files === 1 ? '' : 's') : ''}`;
-    const canPick = (st === 'ghost' || st === 'unsure') && !demo;
-    const action = st === 'buried' ? (demo ? '' : `<button class="btn" data-restore="${esc(e.id)}">Restore</button>`) : (canPick ? `<button class="btn bury" data-bury="${esc(e.id)}">Bury</button>` : '');
+    const canPick = st === 'ghost' || st === 'unsure';
+    const action = st === 'buried' ? `<button class="btn" data-restore="${esc(e.id)}">Restore</button>` : (canPick ? `<button class="btn bury" data-bury="${esc(e.id)}">Bury</button>` : '');
     const deco = st === 'ghost' ? `<div class="marigolds" aria-hidden="true"><span class="mg"></span><span class="mg"></span><span class="mg"></span></div><div class="candle" aria-hidden="true"><div class="flame"></div></div>` : st === 'buried' ? `<div class="marigolds" aria-hidden="true"><span class="mg"></span></div>` : '';
     return `<article class="plot ${st} ${selected.has(e.id) ? 'selected' : ''}" data-id="${esc(e.id)}">
       ${deco}
@@ -384,8 +384,7 @@
     const grid = filter === 'ghost' || filter === 'unsure' || filter === 'buried';
     const c = $('#content');
     if (!items.length) {
-      const trimmed = report.trimmed && (filter === 'living' || filter === 'protected' || filter === 'keep');
-      c.innerHTML = `<div class="empty">${trimmed ? `${report.totals[filter === 'living' ? 'living' : filter]} ${filter} items are hidden in this demo.` : filter === 'ghost' ? (report.fallback ? 'No verdicts yet.' : 'No ghosts here.') : 'Nothing here.'}<small>${trimmed ? 'They are a list of the apps on the machine the scan ran on, which is exactly what this tool keeps private. Run it on your own computer to see yours.' : filter === 'ghost' && report.fallback ? 'Start Ollama and run the scan again.' : ''}</small></div>`;
+      c.innerHTML = `<div class="empty">${filter === 'ghost' ? (report.fallback ? 'No verdicts yet.' : 'No ghosts here.') : 'Nothing here.'}<small>${filter === 'ghost' && report.fallback ? 'Start Ollama and run the scan again.' : ''}</small></div>`;
     } else if (grid) {
       c.innerHTML = `<div class="yard">${items.map(stone).join('')}</div>`;
     } else {
@@ -395,8 +394,7 @@
     c.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { cb.checked ? selected.add(cb.dataset.pick) : selected.delete(cb.dataset.pick); cb.closest('.plot').classList.toggle('selected', cb.checked); updateDock(); });
     c.querySelectorAll('[data-bury]').forEach(b => b.onclick = () => bury([b.dataset.bury]));
     c.querySelectorAll('[data-restore]').forEach(b => b.onclick = () => restore(b.dataset.restore));
-    $('#allWrap').style.visibility = grid && filter !== 'buried' && !demo ? 'visible' : 'hidden';
-    $('#hint').textContent = demo ? 'Demo replay: burying is disabled.' : '';
+    $('#allWrap').style.visibility = grid && filter !== 'buried' ? 'visible' : 'hidden';
     updateDock();
   }
 
@@ -404,7 +402,7 @@
     const n = selected.size;
     const bytes = report.items.filter(e => selected.has(e.id)).reduce((a, e) => a + (e.bytes || 0), 0);
     $('#dockText').innerHTML = `<b>${n}</b> selected · <b>${human(bytes)}</b>`;
-    $('#dock').classList.toggle('show', n > 0 && !demo);
+    $('#dock').classList.toggle('show', n > 0);
   }
 
   async function post(url, body) {
@@ -515,8 +513,7 @@
       if (j.error) throw new Error(j.error);
       report = j;
     } catch (e) {
-      if (window.GRAVEYARD_DEMO) { report = window.GRAVEYARD_DEMO; demo = true; }
-      else {
+      {
         report = null;
         try { await fetchStatus(); } catch (e2) { $('#verdict').textContent = 'No report yet.'; $('#meta').innerHTML = 'Run <code>python -m appgraveyard</code> to scan this machine.'; return; }
         showStart();
@@ -528,7 +525,7 @@
     selected.clear();
     hideStart();
     render();
-    if (!demo) {
+    {
       try { await fetchStatus(); } catch (e) { return; }
       if (status.job.status === 'running' && !afterScan) { showStart(); poll(); }
     }
