@@ -16,6 +16,8 @@ It runs on macOS, Windows and Linux, offline, with no API key. The only network 
 
 ## Demo
 
+![Demo: the site in its install state, the helper starting, the page connecting by itself, a scan with progress, the graveyard, one bury and one restore](https://raw.githubusercontent.com/raushanichaudhary/app-graveyard/main/docs/demo.gif)
+
 ![App Graveyard: one tombstone per dead app, with a verdict, a reason and an epitaph](https://raw.githubusercontent.com/raushanichaudhary/app-graveyard/main/docs/screenshot.png)
 
 **Open https://raushanichaudhary.github.io/app-graveyard/** and follow the three steps on the page. The page itself connects to a 1 MB helper on your own machine and runs the scan from there, so the site is the app, not a brochure.
