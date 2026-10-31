@@ -18,10 +18,6 @@ It runs on macOS, Windows and Linux, offline, with no API key. The only network 
 
 {% embed https://youtu.be/HYClrIPK-YQ %}
 
-![Demo: first visit with the three steps, the page connecting by itself, a scan with progress, the graveyard, one bury, one restore, and a return visit that needs no setup](https://dev-to-uploads.s3.us-east-2.amazonaws.com/uploads/articles/whsyxqfq03wzowu8jbfo.gif)
-
-(The GIF above is a 51-second cut of the same recording. The three-minute model stage is cut out of both.)
-
 ![App Graveyard: one tombstone per dead app, with a verdict, a reason and an epitaph](https://raw.githubusercontent.com/raushanichaudhary/app-graveyard/main/docs/screenshot.png)
 
 **Open https://raushanichaudhary.github.io/app-graveyard/** and follow the three one-time steps on the page. The page itself connects to a 1 MB helper on your own machine and runs the scan from there, so the site is the app, not a brochure. On macOS and Linux the install line registers the helper as a login service, so from then on the page is just a Scan button; on Windows it is a single .exe.
