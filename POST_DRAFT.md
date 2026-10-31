@@ -8,7 +8,7 @@ tags: devchallenge, hf26challenge, ai, opensource
 
 ## What I Built
 
-A few weeks ago I set up a new laptop and did what everyone does with a new laptop: tried a pile of apps. A couple of browsers, a fancier terminal, a clipboard manager, two beta builds of things I already had. Most of them went to the Trash within days. The icons disappeared, so I assumed the apps had too.
+A few weeks ago I set up a new Mac and did what everyone does with a new laptop: tried a pile of apps. A couple of browsers, a fancier terminal, a clipboard manager, two beta builds of things I already had. Most of them went to the Trash within days. The icons disappeared, so I assumed the apps had too.
 
 They hadn't. Each one had left a little pile of itself in `~/Library`: preferences, caches, a log or two, sometimes a whole container. Nothing big. But it was sitting on a laptop that was four weeks old, and nothing was ever going to look at it again. That felt like the theme, so I ran with it.
 
