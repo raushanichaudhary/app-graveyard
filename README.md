@@ -22,7 +22,7 @@ curl -fsSL https://raushanichaudhary.github.io/app-graveyard/run.sh | sh
 
 On Windows the page offers `AppGraveyard-windows.exe` from the [releases page](https://github.com/raushanichaudhary/app-graveyard/releases/latest): a single file with Python bundled, no install needed. It is not code-signed, so SmartScreen shows "Windows protected your PC" once; click More info, then Run anyway. The ZIP with `App Graveyard.bat` remains as a fallback for people who already have Python.
 
-The releases page also has standalone builds for macOS (Apple silicon and Intel) and Linux, built by the workflow in `.github/workflows/release.yml` with PyInstaller. On macOS they are unsigned, so Gatekeeper refuses them when downloaded; the pasted line above is the better route there. If you cloned the repo with git, `App Graveyard.command` works fine.
+The releases page also has standalone builds for macOS (Apple silicon) and Linux, built by the workflow in `.github/workflows/release.yml` with PyInstaller. On macOS they are unsigned, so Gatekeeper refuses them when downloaded; the pasted line above is the better route there. If you cloned the repo with git, `App Graveyard.command` works fine.
 
 After the one-time downloads, nothing needs the internet: the helper serves the same page at http://127.0.0.1:7777/.
 

@@ -18,10 +18,7 @@ jobs:
             name: AppGraveyard-windows.exe
             sep: ";"
           - os: macos-latest
-            name: AppGraveyard-macos-apple-silicon
-            sep: ":"
-          - os: macos-13
-            name: AppGraveyard-macos-intel
+            name: AppGraveyard-macos
             sep: ":"
           - os: ubuntu-latest
             name: AppGraveyard-linux
