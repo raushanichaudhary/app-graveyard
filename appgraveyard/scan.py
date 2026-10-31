@@ -4,6 +4,7 @@ import sys
 import time
 from datetime import datetime
 
+from .progress import clear, tick
 from .platforms import leftover_roots, is_protected
 
 
@@ -51,9 +52,7 @@ def scan(progress=True):
     for label, root in roots:
         for name in sorted(os.listdir(root)):
             done += 1
-            if progress:
-                sys.stderr.write("\r  scanning %d/%d  %-40s" % (done, total, name[:40]))
-                sys.stderr.flush()
+            tick(progress, "scanning", done, total, name)
             path = os.path.join(root, name)
             size, files, newest, oldest, samples = _measure(path)
             entries.append({
@@ -70,8 +69,7 @@ def scan(progress=True):
                 "samples": samples,
                 "protected": is_protected(name),
             })
-    if progress:
-        sys.stderr.write("\r" + " " * 70 + "\r")
+    clear(progress)
     return entries
 
 

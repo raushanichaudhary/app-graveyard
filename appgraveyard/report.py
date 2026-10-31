@@ -3,10 +3,10 @@ import json
 import os
 import time
 import webbrowser
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
-from . import quarantine
+from . import job, quarantine
 from .platforms import SYSTEM
 from .scan import human
 
@@ -36,6 +36,7 @@ def build(entries, meta, apps_count, seconds, raw_count=None):
         "platform": {"Darwin": "macOS", "Windows": "Windows", "Linux": "Linux"}.get(SYSTEM, SYSTEM),
         "model": meta.get("model"),
         "fallback": meta.get("fallback", False),
+        "skipped": meta.get("skipped", False),
         "scan_seconds": round(seconds, 1),
         "totals": {
             "scanned": raw_count or len(entries),
@@ -87,6 +88,8 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/api/report"):
             return self._json(200, load() or {"error": "no report yet"})
+        if self.path.startswith("/api/status"):
+            return self._json(200, {"report": REPORT.exists(), "ollama": job.ollama_status(), "job": job.snapshot(), "platform": SYSTEM})
         if self.path == "/":
             self.path = "/index.html"
         return super().do_GET()
@@ -94,6 +97,14 @@ class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length") or 0)
         body = json.loads(self.rfile.read(length) or b"{}")
+        if self.path == "/api/scan":
+            started = job.start_scan(use_model=bool(body.get("use_model", True)))
+            return self._json(200 if started else 409, {"started": started, "job": job.snapshot()})
+        if self.path == "/api/pull":
+            started = job.start_pull(body.get("model"))
+            return self._json(200 if started else 409, {"started": started, "job": job.snapshot()})
+        if job.busy():
+            return self._json(409, {"error": "a scan is running; wait for it to finish"})
         report = load()
         if not report:
             return self._json(400, {"error": "no report"})
@@ -137,7 +148,7 @@ def _recount(report):
 
 
 def serve(port=7777, open_browser=True):
-    server = HTTPServer(("127.0.0.1", port), Handler)
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     url = "http://127.0.0.1:%d/" % port
     print("  graveyard open at %s   (Ctrl+C to close)" % url)
     if open_browser:

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "app-graveyard"
+version = "0.1.0"
+description = "The apps you uninstalled left ghosts behind. Finds leftover app data and asks a local open-weight model what it was. Nothing is deleted, only buried."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Raushani Chaudhary" }]
+requires-python = ">=3.9"
+keywords = ["ollama", "gemma", "local-ai", "privacy", "cleanup", "uninstall", "leftovers"]
+classifiers = [
+  "Environment :: Console",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: System :: Filesystems",
+  "Topic :: Utilities",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/raushanichaudhary77-create/app-graveyard"
+Demo = "https://raushanichaudhary77-create.github.io/app-graveyard/"
+
+[project.scripts]
+appgraveyard = "appgraveyard.__main__:main"
+
+[tool.setuptools]
+packages = ["appgraveyard"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+appgraveyard = ["ui/*.html"]

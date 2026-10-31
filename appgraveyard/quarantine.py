@@ -6,7 +6,7 @@ import shutil
 import time
 from pathlib import Path
 
-HOME_DIR = Path(os.environ.get("RESIDUE_HOME", Path.home() / ".residue"))
+HOME_DIR = Path(os.environ.get("GRAVEYARD_HOME", Path.home() / ".app-graveyard"))
 GRAVEYARD = HOME_DIR / "quarantine"
 MANIFEST = GRAVEYARD / "manifest.json"
 

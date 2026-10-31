@@ -42,6 +42,8 @@ def group(entries):
             status = "protected"
         elif "living" in statuses:
             status = "living"
+        elif "keep" in statuses:
+            status = "keep"
         else:
             status = "orphan"
         matched = next((p["matched_app"] for p in parts if p.get("matched_app")), None)
@@ -69,5 +71,9 @@ def group(entries):
             "protected": status == "protected",
             "status": status,
             "matched_app": matched,
+            "vendor_installed": sorted({a for p in parts for a in p.get("vendor_installed", [])})[:8],
         })
+        if status == "keep":
+            for k in ("product", "vendor", "category", "verdict", "confidence", "reason", "epitaph"):
+                groups[-1][k] = parts[0][k]
     return groups

@@ -39,7 +39,9 @@ def tokens(text):
     text = text.strip()
     # strip common file extensions
     text = re.sub(r"\.(plist|json|db|sqlite|log|ini|xml|lock|savedState|txt)$", "", text, flags=re.I)
-    parts = re.split(r"[.\s_\-/\\+()\[\],]+", text)
+    # split CamelCase too: ZoomChat -> Zoom Chat, OfficeOsfWebHost -> Office Osf Web Host
+    spaced = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", text)
+    parts = re.split(r"[.\s_\-/\\+()\[\],]+", spaced)
     for p in parts:
         n = normalize(p)
         if len(n) >= 3 and n not in GENERIC and not n.isdigit():
@@ -110,7 +112,7 @@ PROTECTED_PREFIXES = {
 
 PROTECTED_EXACT = {
     "Darwin": {"ByHost", "Google", "Microsoft", "Adobe", "JetBrains", "Mozilla",
-               "Residue", ".DS_Store", "com.residue",
+               "App Graveyard", ".DS_Store", "com.app-graveyard",
                # macOS components that do not carry a com.apple prefix
                "PassKit", "GeoServices", "GameKit", "Animoji", "networkserviceproxy", "icdd",
                "homeenergyd", "locationaccessstored", "familycircled", "FamilyCircle", "familycircled.plist",
@@ -120,9 +122,23 @@ PROTECTED_EXACT = {
                "default.store", "default.store-shm", "default.store-wal", "group.is.workflow.my.app",
                "group.tvappservices.container", "com.android.Emulator.plist", "Assistant", "SyncServices",
                "ScreenRecording", "StatusKit", "UBF8T346G9.ms", "Dropbox"},
-    "Windows": {"Microsoft", "Google", "Adobe", "Mozilla", "Residue"},
-    "Linux": {"Residue"},
+    "Windows": {"Microsoft", "Google", "Adobe", "Mozilla", "App Graveyard"},
+    "Linux": {"App Graveyard"},
 }
+
+
+# Caches and state of command-line tools: never app leftovers, always worth keeping.
+DEV_CACHES = {
+    "pnpm", "pip", "npm", "yarn", "homebrew", "nodegyp", "electron", "electronbuilder", "gobuild", "cargo",
+    "gradle", "maven", "composer", "pypoetry", "uv", "bun", "deno", "nvm", "pyenv", "rustup", "typescript",
+    "msplaywright", "puppeteer", "cypress", "huggingface", "ollama", "docker", "pipx", "virtualenv",
+    "copilot", "vercelcli", "nextjsnodejs", "createnextappnodejs", "astro", "vitest", "turbo", "nx",
+    "eslint", "prettier", "babel", "webpack", "vite", "jest", "corepack", "node", "pythonlanguageserver",
+}
+
+
+def is_dev_cache(name):
+    return normalize(name) in DEV_CACHES
 
 
 def is_protected(name):

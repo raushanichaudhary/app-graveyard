@@ -10,11 +10,12 @@ import sys
 import urllib.request
 
 from .platforms import SYSTEM
+from .progress import clear, tick
 from .scan import human
 
-HOST = os.environ.get("RESIDUE_HOST", "http://127.0.0.1:11434")
-MODEL = os.environ.get("RESIDUE_MODEL", "gemma3:4b")
-TIMEOUT = float(os.environ.get("RESIDUE_TIMEOUT", "180"))
+HOST = os.environ.get("GRAVEYARD_HOST", "http://127.0.0.1:11434")
+MODEL = os.environ.get("GRAVEYARD_MODEL", "gemma3:4b")
+TIMEOUT = float(os.environ.get("GRAVEYARD_TIMEOUT", "180"))
 BATCH = 4
 
 OS_NAME = {"Darwin": "macOS", "Windows": "Windows", "Linux": "Linux"}.get(SYSTEM, SYSTEM)
@@ -36,6 +37,11 @@ For each folder decide:
 - reason: under 20 words, factual.
 - epitaph: one short darkly funny tombstone line for the dead app, under 14 words, no emoji, no quotes. For "keep" or "unsure" items write a one-line note instead.
 
+Rules of thumb:
+- A normal desktop app (browser, terminal emulator, clipboard manager, chat or video app, editor, game) whose app is not installed is a "ghost", even if its folder holds a database or preferences: the app that could read them is gone.
+- Judge a folder by ITS OWN product. "Microsoft Edge" is a ghost if Edge is gone, even if other Microsoft apps are installed.
+- Shared vendor services (updaters, auth brokers, licence and preference stores such as an Office group container) are "keep" when "other_installed_apps_from_same_vendor" lists apps that still use them.
+- Package-manager and build caches are "keep": they belong to tools on the PATH, not to app bundles.
 Be conservative: anything that could hold credentials, licenses, SSH keys, package caches that are cheap to lose but used by developer tools, or data for a tool run from the terminal should be "keep" or "unsure", not "ghost".
 Respond with JSON only: {"items":[{"name":..., "product":..., "vendor":..., "category":..., "verdict":..., "confidence":..., "reason":..., "epitaph":...}]}
 Return exactly one item per input, in the same order, with the same "name".""" % OS_NAME
@@ -67,6 +73,8 @@ def _describe(e):
         "last_modified": e["last_modified"],
         "days_idle": e["days_idle"],
         "contains": e["samples"],
+        "product_installed": "No installed application matched this name.",
+        "other_installed_apps_from_same_vendor": e.get("vendor_installed") or "none",
     }
 
 
@@ -96,9 +104,7 @@ def consult(entries, progress=True):
 
     for i in range(0, len(orphans), BATCH):
         batch = orphans[i:i + BATCH]
-        if progress:
-            sys.stderr.write("\r  consulting %s  %d/%d" % (MODEL, min(i + BATCH, len(orphans)), len(orphans)))
-            sys.stderr.flush()
+        tick(progress, "consulting " + MODEL, i, len(orphans), ", ".join(e["name"] for e in batch))
         payload = {
             "model": MODEL,
             "stream": False,
@@ -126,9 +132,7 @@ def consult(entries, progress=True):
             _apply(e, it)
     # second pass: anything the model skipped or mislabeled gets asked about on its own
     for e in [o for o in orphans if o.get("_retry")]:
-        if progress:
-            sys.stderr.write("\r  retrying %-40s" % e["name"][:40])
-            sys.stderr.flush()
+        tick(progress, "asking again", len(orphans), len(orphans), e["name"])
         payload["messages"][1] = {"role": "user", "content": json.dumps({"folders": [_describe(e)]}, indent=1)}
         it = None
         try:
@@ -144,8 +148,8 @@ def consult(entries, progress=True):
             e["status"] = "unsure"
             continue
         _apply(e, it)
-    if progress:
-        sys.stderr.write("\r" + " " * 70 + "\r")
+    tick(progress, "consulting " + MODEL, len(orphans), len(orphans), "")
+    clear(progress)
     return meta
 
 
