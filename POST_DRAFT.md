@@ -16,9 +16,11 @@ It runs on macOS, Windows and Linux, offline, with no API key. The only network 
 
 ## Demo
 
+{% embed https://youtu.be/HYClrIPK-YQ %}
+
 ![Demo: first visit with the three steps, the page connecting by itself, a scan with progress, the graveyard, one bury, one restore, and a return visit that needs no setup](https://dev-to-uploads.s3.us-east-2.amazonaws.com/uploads/articles/whsyxqfq03wzowu8jbfo.gif)
 
-(Same recording with narration: [demo.mp4](https://github.com/raushanichaudhary/app-graveyard/raw/main/docs/demo.mp4), 1 min 42 s. The three-minute model stage is cut out of the middle.)
+(The GIF above is a 51-second cut of the same recording. The three-minute model stage is cut out of both.)
 
 ![App Graveyard: one tombstone per dead app, with a verdict, a reason and an epitaph](https://raw.githubusercontent.com/raushanichaudhary/app-graveyard/main/docs/screenshot.png)
 
