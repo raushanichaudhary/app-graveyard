@@ -384,7 +384,8 @@
     const grid = filter === 'ghost' || filter === 'unsure' || filter === 'buried';
     const c = $('#content');
     if (!items.length) {
-      c.innerHTML = `<div class="empty">${filter === 'ghost' ? (report.fallback ? 'No verdicts yet.' : 'No ghosts here.') : 'Nothing here.'}<small>${filter === 'ghost' && report.fallback ? 'Start Ollama and run the scan again.' : ''}</small></div>`;
+      const trimmed = report.trimmed && (filter === 'living' || filter === 'protected' || filter === 'keep');
+      c.innerHTML = `<div class="empty">${trimmed ? `${report.totals[filter === 'living' ? 'living' : filter]} ${filter} items are hidden in this demo.` : filter === 'ghost' ? (report.fallback ? 'No verdicts yet.' : 'No ghosts here.') : 'Nothing here.'}<small>${trimmed ? 'They are a list of the apps on the machine the scan ran on, which is exactly what this tool keeps private. Run it on your own computer to see yours.' : filter === 'ghost' && report.fallback ? 'Start Ollama and run the scan again.' : ''}</small></div>`;
     } else if (grid) {
       c.innerHTML = `<div class="yard">${items.map(stone).join('')}</div>`;
     } else {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build docs/index.html: the graveyard UI with a scrubbed copy of a real report
+"""Build docs/demo.html: the graveyard UI with a scrubbed copy of a real report
 embedded, so GitHub Pages can show a replay without a backend.
 
     python tools/make_demo.py [~/.app-graveyard/report.json]
@@ -36,13 +36,17 @@ def deep(o):
 
 
 report = deep(report)
+# Only the story goes public: ghosts, unsure, and the keeps the model judged.
+# Living and protected items are an inventory of the machine; keep the counts, drop the rows.
+report["items"] = [e for e in report["items"] if e["status"] in ("ghost", "unsure", "buried") or (e["status"] == "keep" and "rule" not in (e.get("reason") or ""))]
+report["trimmed"] = True
 report["quarantine"] = scrub(str(Path.home() / ".app-graveyard" / "quarantine"))
 
 html = (ROOT / "appgraveyard" / "ui" / "index.html").read_text()
 payload = "<script>window.GRAVEYARD_DEMO = " + json.dumps(report).replace("</", "<\\/") + ";</script>\n</head>"
 html = html.replace("</head>", payload, 1)
 html = html.replace("<title>App Graveyard</title>", "<title>App Graveyard (demo replay)</title>")
-out = ROOT / "docs" / "index.html"
+out = ROOT / "docs" / "demo.html"
 out.parent.mkdir(exist_ok=True)
 out.write_text(html)
 print("wrote", out, "with", len(report["items"]), "items")

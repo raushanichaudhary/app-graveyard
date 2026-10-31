@@ -24,7 +24,7 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/raushanichaudhary77-create/app-graveyard"
-Demo = "https://raushanichaudhary77-create.github.io/app-graveyard/"
+Demo = "https://raushanichaudhary77-create.github.io/app-graveyard/demo.html"
 
 [project.scripts]
 appgraveyard = "appgraveyard.__main__:main"
