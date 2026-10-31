@@ -16,9 +16,9 @@ It runs on macOS, Windows and Linux, offline, with no API key. The only network 
 
 ## Demo
 
-![App Graveyard: one tombstone per dead app, with a verdict, a reason and an epitaph](https://raw.githubusercontent.com/raushanichaudhary77-create/app-graveyard/main/docs/screenshot.png)
+![App Graveyard: one tombstone per dead app, with a verdict, a reason and an epitaph](https://raw.githubusercontent.com/raushanichaudhary/app-graveyard/main/docs/screenshot.png)
 
-**Open https://raushanichaudhary77-create.github.io/app-graveyard/** and follow the three steps on the page. The page itself connects to a 1 MB helper on your own machine and runs the scan from there, so the site is the app, not a brochure.
+**Open https://raushanichaudhary.github.io/app-graveyard/** and follow the three steps on the page. The page itself connects to a 1 MB helper on your own machine and runs the scan from there, so the site is the app, not a brochure.
 
 Offline, double-clicking the helper opens the same page from `127.0.0.1`. Or from a terminal, a run on a one-month-old Mac:
 
@@ -34,7 +34,7 @@ $ python -m appgraveyard
 
 ## Code
 
-{% embed https://github.com/raushanichaudhary77-create/app-graveyard %}
+{% embed https://github.com/raushanichaudhary/app-graveyard %}
 
 MIT, Python standard library only, no dependencies beyond Ollama.
 

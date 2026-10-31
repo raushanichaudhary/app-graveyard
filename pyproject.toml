@@ -23,7 +23,7 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/raushanichaudhary77-create/app-graveyard"
+Homepage = "https://github.com/raushanichaudhary/app-graveyard"
 
 [project.scripts]
 appgraveyard = "appgraveyard.__main__:main"

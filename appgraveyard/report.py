@@ -14,7 +14,7 @@ HOME_DIR = quarantine.HOME_DIR
 REPORT = HOME_DIR / "report.json"
 UI_DIR = Path(__file__).parent / "ui"
 # The public page on GitHub Pages talks to this helper. Only that origin (and a local copy) may.
-SITE = "https://raushanichaudhary77-create.github.io"
+SITE = "https://raushanichaudhary.github.io"
 ALLOWED_ORIGINS = {SITE, os.environ.get("GRAVEYARD_ORIGIN", SITE), "null"}
 
 
