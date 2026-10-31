@@ -170,7 +170,11 @@ def _recount(report):
 
 
 def serve(port=7777, open_browser=True):
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    except OSError as e:
+        print("  port %d is taken, probably by another App Graveyard helper; leaving that one in charge. (%s)" % (port, e))
+        return
     url = "http://127.0.0.1:%d/" % port
     print("  graveyard open at %s   (Ctrl+C to close)" % url)
     if open_browser:

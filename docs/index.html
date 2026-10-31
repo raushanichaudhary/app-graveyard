@@ -271,7 +271,7 @@
           <div class="only" data-for="mac linux">
             <p>Open <b>Terminal</b> (on a Mac: press <kbd>⌘</kbd>+<kbd>Space</kbd>, type <i>Terminal</i>, press Enter), paste this line and press Enter:</p>
             <p class="cmd"><code id="cmd">curl -fsSL https://raushanichaudhary.github.io/app-graveyard/run.sh | sh</code><button class="btn copy" id="copy" type="button">Copy</button></p>
-            <p>It downloads the 1 MB helper into <code>~/.app-graveyard</code> and starts it. Keep the Terminal window open. Why not a double-click? macOS blocks downloaded programs that are not Apple-signed; this line does the same thing without the warning. Standalone builds that need no Python are on the <a href="https://github.com/raushanichaudhary/app-graveyard/releases/latest" target="_blank" rel="noopener">releases page</a>.</p>
+            <p>Once. It puts the 1 MB helper in <code>~/.app-graveyard</code> and registers it to run quietly in the background from now on, including after a restart. You can close Terminal afterwards; this page then just has a Scan button. Why a line and not a download? A web page is not allowed to start programs on your computer, and macOS blocks downloaded programs that are not Apple-signed. Standalone builds are on the <a href="https://github.com/raushanichaudhary/app-graveyard/releases/latest" target="_blank" rel="noopener">releases page</a>.</p>
           </div>
           <div class="only" data-for="win">
             <p><a class="btn bury" href="https://github.com/raushanichaudhary/app-graveyard/releases/latest/download/AppGraveyard-windows.exe">Download AppGraveyard.exe</a></p>
@@ -588,9 +588,9 @@
       selected.clear();
       document.querySelector('main').style.display = '';
       render();
-      $('#meta').insertAdjacentHTML('beforeend', ' · <b>helper not running</b>, showing your last scan. Start it to scan again, bury or restore.');
+      $('#meta').insertAdjacentHTML('beforeend', ' · <b>helper not running</b>, showing your last scan. Run the line above once more to scan again, bury or restore.');
     } else if (again) {
-      $('#meta').textContent = 'You set this up before. The helper only runs while its window is open, so start it again:';
+      $('#meta').textContent = 'You set this up before but the helper is not answering. Run the line once more; it starts it again and keeps it running from now on.';
     }
     clearTimeout(setupTimer);
     setupTimer = setTimeout(load, 3000);

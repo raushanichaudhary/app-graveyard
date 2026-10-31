@@ -14,7 +14,7 @@ No cloud, no API key, no telemetry. The only network call is to `127.0.0.1:11434
 
 The page is the app. It walks you through three one-time steps (install Python 3, install Ollama, download and double-click the 1 MB helper), then connects to that helper on `127.0.0.1:7777` by itself and does everything else from the page: checks the model, downloads it once if needed (about 3 GB through Ollama), scans with a progress bar, shows the graveyard, buries and restores. The helper only answers that page and `127.0.0.1`; no other website can talk to it.
 
-On macOS and Linux the page gives you one line to paste into Terminal; it downloads the helper into `~/.app-graveyard/app` and starts it:
+On macOS and Linux the page gives you one line to paste into Terminal, once. It downloads the helper into `~/.app-graveyard/app` and registers it as a login service (a LaunchAgent on macOS, a systemd user unit on Linux), so it keeps running in the background and the page only ever needs its Scan button from then on. A web page cannot start programs on your computer, which is why this one line exists:
 
 ```bash
 curl -fsSL https://raushanichaudhary.github.io/app-graveyard/run.sh | sh
@@ -24,7 +24,7 @@ On Windows the page offers `AppGraveyard-windows.exe` from the [releases page](h
 
 The releases page also has standalone builds for macOS (Apple silicon) and Linux, built by the workflow in `.github/workflows/release.yml` with PyInstaller. On macOS they are unsigned, so Gatekeeper refuses them when downloaded; the pasted line above is the better route there. If you cloned the repo with git, `App Graveyard.command` works fine.
 
-After the one-time downloads, nothing needs the internet: the helper serves the same page at http://127.0.0.1:7777/.
+After the one-time downloads, nothing needs the internet: the helper serves the same page at http://127.0.0.1:7777/. To remove the background service: `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/io.github.raushanichaudhary.app-graveyard.plist` on macOS, `systemctl --user disable --now app-graveyard` on Linux, then delete `~/.app-graveyard`.
 
 **The terminal way.**
 
